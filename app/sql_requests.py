@@ -1,5 +1,7 @@
 SELECT_USERS = "SELECT * FROM users;"
 
+SELECT_USER_ON_EMAIL_OR_NAME = "select user_email, user_name from users where user_email=%s or user_name = %s"
+
 SELECT_USER = """SELECT * from users WHERE user_email = %s;"""
 
 SELECT_USER_SEEN_TASKS = "select * from users_to_tasks where user_id = %s"

@@ -17,6 +17,21 @@ async def handle(**kwargs):
             except psycopg2.Error:
                 result = 'err'
                 print(psycopg2.Error)
+        if kwargs['req'] == 'get_valid_name':
+            cursor.execute(sql_requests.SELECT_USER_ON_EMAIL_OR_NAME, [kwargs['user_email'], kwargs['user_name']])
+            temp = cursor.fetchall()
+            print(temp)
+            if temp:
+                if temp[0][0] == kwargs['user_email'] and temp[0][1] == kwargs['user_name']:
+                    result = {'valid': False, 'msg': 'this email and name already exist'}
+                elif temp[0][0] == kwargs['user_email']:
+                    result = {'valid': False, 'msg': 'this email already exist'}
+                elif temp[0][1] == kwargs['user_name']:
+                    result = {'valid': False, 'msg': 'this name already exist'}
+                else:
+                    result = {'valid': True}
+            else:
+                result = {'valid': True}
         elif kwargs['req'] == 'get_seen_tasks':
             cursor.execute(sql_requests.SELECT_USER_SEEN_TASKS, [kwargs['user_id']])
             result = cursor.fetchall()

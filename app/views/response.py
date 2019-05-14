@@ -8,9 +8,9 @@ from .processings_functions import format_to_article
 # TODO выделить общие части и вынести в отдельный класс
 # TODO сделать хотя бы базовое шифрование и дешифрование передавеммых данных
 async def test(request):
-    result = await handle(req='test')
-    print(result)
-    users = []
+    # result = await handle(req='test')
+    # print(result)
+    # users = []
     # j_response = {}
     # if result != psycopg2.Error:
     #     for i in result:
@@ -167,13 +167,41 @@ async def add_user(request):
 
         user_name    = post['userName']
         user_email   = post['userEmail']
-        user_rate    = 0
 
-        result = await handle(req='add_user', user_name=user_name, user_email=user_email, user_rate=user_rate)
-        response_msg['msg'] = result
+        result = await handle(req='get_valid_name', user_name=user_name, user_email=user_email)
+        if result['valid']:
+            user_rate = 0
+            result = await handle(req='add_user', user_name=user_name, user_email=user_email, user_rate=user_rate)
+            response_msg['valid'] = True
+            response_msg['msg'] = result
+        else:
+            response_msg['valid'] = result['valid']
+            response_msg['msg']   = result['msg']
         return web.json_response(response_msg, headers=headers)
     else:
         return web.Response(text='get', headers=headers)
+
+async def get_valid_name(request):
+    headers = {'Access-Control-Allow-Origin': '*'}
+    if request.method == 'POST':
+        # ответное сообщение
+        response_msg = {}
+
+        # get body req
+        post = await request.json()
+
+        user_name = post['userName']
+        user_email = post['userEmail']
+
+        result = await handle(req='get_valid_name', user_name=user_name, user_email=user_email)
+        if result[0][0]==True and result[0][1]==True:
+            user_rate = 0
+            result = await handle(req='add_user', user_name=user_name, user_email=user_email, user_rate=user_rate)
+            response_msg['valid'] = True
+            response_msg['msg'] = result
+        else:
+            response_msg['valid'] = False
+        return web.json_response(response_msg, headers=headers)
 
 async def update_user_article(request):
     headers = {'Access-Control-Allow-Origin': '*'}
@@ -880,7 +908,7 @@ async def request_to_jdoodle_with_check_valid(request):
             'clientId': credentials.JDOODLE_CLIENT_ID,
             'clientSecret': credentials.JDOODLE_CLIENT_SECRET
         }
-        re = requests.post(credentials.JDOODLE_EXECUTE, json=params, headers=headers, verify=False)
+        re = requests.post(credentials.JDOODLE_EXECUTE, json=params, headers=headers)
 
         # print(re.text)
         j_resp = json.loads(re.text)

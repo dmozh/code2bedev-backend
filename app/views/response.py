@@ -3,7 +3,7 @@ import json
 # from app import sql_requests
 from .sql_handler import handle
 import requests, credentials
-from .processings_functions import format_to_article
+from .processings_functions import format_to_article, check_lesson_ids_on_update_task as chk_ids
 
 # TODO выделить общие части и вынести в отдельный класс
 # TODO сделать хотя бы базовое шифрование и дешифрование передавеммых данных
@@ -91,7 +91,7 @@ async def add_task(request):
         post = await request.json()
         print(post)
 
-        lesson_name = post['lesson_name']
+        lang_id = post['lang_id']
         task_name = post['taskName']
         task_description = post['taskDescription']
         task_text = post['taskText']
@@ -100,13 +100,15 @@ async def add_task(request):
         task_rate = 0
         author_email = post['authorEmail']
         task_difficulty = post['difficulty']
-
-        result = await handle(req='add_task', lesson_name=lesson_name, task_name=task_name,
+        linked_lessons = post['linkedLessons']
+        result = await handle(req='add_task', task_name=task_name, lang_id=lang_id,
                         task_description=task_description,
                         task_text=task_text, task_rate=task_rate, author_email=author_email,
                         task_difficulty=task_difficulty, task_test_input=task_test_input, task_expected_output=task_expected_output)
+        if result:
+            for lesson in linked_lessons:
+                await handle(req='link_lessons_to_tasks', lesson_id=lesson['lesson_id'], task_name=task_name)
         response_msg['msg'] = result
-
         return web.json_response(response_msg, headers=headers)
     else:
         return web.Response(text='get', headers=headers)
@@ -277,19 +279,81 @@ async def update_user_task(request):
         post = await request.json()
         print(post)
 
-        lesson_name = post['lesson_name']
+        lang_name = post['lang_name']
         task_id = post['taskId']
         task_name = post['taskName']
         task_description = post['taskDescription']
         task_text = post['taskText']
         task_difficulty = post['difficulty']
+        task_test_input = post['testInput']
+        task_expected_output = post['expectedOutput']
+        linked_lessons = post['linkedLessons']
 
         result = await handle(req='update_task', task_name=task_name,
                               task_description=task_description,
                               task_text=task_text,
-                              lesson_name=lesson_name,
+                              lang_name=lang_name,
                               task_difficulty=task_difficulty,
-                              task_id=task_id)
+                              task_id=task_id,
+                              task_test_input=task_test_input,
+                              task_expected_output=task_expected_output)
+        if result:
+            lessons_ids = await handle(req='get_links_tasks_to_lessons', task_id=task_id)
+
+            print(lessons_ids)
+            print(linked_lessons)
+            if not lessons_ids:
+                print('net linkov')
+                for lesson in linked_lessons:
+                    await handle(req='link_lessons_to_tasks', lesson_id=lesson['id'], task_name=task_name)
+            else:
+                if linked_lessons:
+                    length_cur_ids = len(lessons_ids)
+                    length_new_ids = len(linked_lessons)
+                    if length_cur_ids == length_new_ids:
+                        for i in range(length_cur_ids):
+                            print(i)
+                            print(f'{lessons_ids[i][0]} {linked_lessons[i]["lesson_id"]}')
+                            if chk_ids(lessons_ids[i][0], linked_lessons[i]['lesson_id']):
+                                print('ravni')
+                            else:
+                                print('neravni')
+                                await handle(req='update_link_task_to_lesson', lesson_id=lessons_ids[i][0], task_id=task_id,
+                                             new_l_id=linked_lessons[i]['lesson_id'])
+                    else:
+                        if length_cur_ids>length_new_ids:
+                            for i in range(length_cur_ids):
+                                try:
+                                    print(f'{lessons_ids[i][0]} {linked_lessons[i]["lesson_id"]}')
+                                    if chk_ids(lessons_ids[i][0], linked_lessons[i]['lesson_id']):
+                                        print('ravni')
+                                    else:
+                                        print('neravni')
+                                        await handle(req='update_link_task_to_lesson', lesson_id=lessons_ids[i][0],
+                                                     task_id=task_id, new_l_id=linked_lessons[i]['lesson_id'])
+                                except IndexError as e:
+                                    print(e)
+                                    print(f'delete {lessons_ids[i][0]}')
+                                    await handle(req='delete_link_task_to_lesson', lesson_id=lessons_ids[i][0], task_id=task_id)
+                        else:
+                            for i in range(length_new_ids):
+                                try:
+                                    print(f'{lessons_ids[i][0]} {linked_lessons[i]["lesson_id"]}')
+                                    if chk_ids(lessons_ids[i][0], linked_lessons[i]['lesson_id']):
+                                        print('ravni')
+                                    else:
+                                        print('neravni')
+                                        await handle(req='update_link_task_to_lesson', lesson_id=lessons_ids[i][0],
+                                                     task_id=task_id, new_l_id=linked_lessons[i]['lesson_id'])
+                                except IndexError as e:
+                                    print(e)
+                                    print(f'add {linked_lessons[i]["lesson_id"]}')
+                                    await handle(req='link_lessons_to_tasks', lesson_id=linked_lessons[i]["lesson_id"],
+                                                 task_name=task_name)
+                else:
+                    for l_id in lessons_ids:
+                        await handle(req='delete_link_task_to_lesson', lesson_id=l_id[0], task_id=task_id)
+                    print('delete links')
         response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
@@ -446,7 +510,7 @@ async def get_user(request):
             temp = {'user_id': i[0], 'lesson_id': i[1], 'isSeen': i[2], 'upVote': i[3], 'downVote': i[4]}
             seen_lessons_temp.append(temp)
         for i in seen_articles_result:
-            temp = {'user_id': i[0], 'articles_id': i[1], 'isSeen': i[2], 'upVote': i[3], 'downVote': i[4]}
+            temp = {'user_id': i[0], 'article_id': i[1], 'isSeen': i[2], 'upVote': i[3], 'downVote': i[4]}
             seen_articles_temp.append(temp)
         for i in seen_news_result:
             temp = {'user_id': i[0], 'news_id': i[1], 'isSeen': i[2], 'upVote': i[3], 'downVote': i[4]}
@@ -499,10 +563,11 @@ async def get_user_lessons_name(request):
         # get body req
         post = await request.json()
         user_email = post['authorEmail']
+        lang = post['lang']
 
         print(request.method)
         print(post)
-        result = await handle(req='get_user_lessons_name', user_email=user_email)
+        result = await handle(req='get_user_lessons_name', user_email=user_email, lang=lang)
         lessons=[]
 
         if result != 'err':
@@ -559,7 +624,8 @@ async def get_user_tasks(request):
         if result != 'err':
             for i in result:
                 j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2], "task_text": i[3],
-                            "task_rate": i[4], "task_difficulty": i[5], "lesson_id": i[6], "lesson_name": i[7]}
+                            "task_rate": i[4], "task_difficulty": i[5], "test_input": i[6], "expected_output": i[7],
+                            "lang_id": i[8], "lang_name": i[9]}
                 tasks.append(j_string)
         else:
             response_msg['err'] = result
@@ -660,9 +726,16 @@ async def get_user_posts(request):
         result = await handle(req='get_user_tasks', user_email=user_email)
         if result != 'err':
             for i in result:
+                lessons_ids = await handle(req='get_links_tasks_to_lessons', task_id=i[0])
+                links_lessons = []
+                for l_id in lessons_ids:
+                    l_name = await handle(req='get_lesson_name', lesson_id=l_id[0])
+                    _temp = {'lesson_id': l_id[0], 'lesson_name': l_name[0][0]}
+                    links_lessons.append(_temp)
                 j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2], "task_text": i[3],
-                            "task_rate": i[4], "task_difficulty": i[5], "lesson_id": i[6], "lesson_name": i[7],
-                            "test_input": i[8], "expected_output": i[9]}
+                            "task_rate": i[4], "task_difficulty": i[5], "test_input": i[6], "expected_output": i[7],
+                            "lang_id": i[8], "lang_name": i[9], "lessons": links_lessons}
+                # print(j_string)
                 tasks.append(j_string)
         else:
             response_msg['err'] = result
@@ -770,16 +843,12 @@ async def get_tasks(request):
             if lang is None:
                 for i in result:
                     j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2],
-                                # "task_text": i[3],
-                                "task_rate": i[3], "task_lesson_id": i[4], "task_lesson_name": i[5], "author": i[6],
-                                "task_difficulty": i[7], "lang": i[8], "test_input": i[9], "expected_output": i[10]}
+                                "task_rate": i[3], "author": i[4], "task_difficulty": i[5], "lang": i[6]}
                     tasks.append(j_string)
             else:
                 for i in result:
                     j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2],
-                                # "task_text": i[3],
-                                "task_rate": i[3], "task_lesson_id": i[4], "task_lesson_name": i[5], "author": i[6],
-                                "task_difficulty": i[7], "test_input": i[8], "expected_output": i[9]}
+                                "task_rate": i[3], "author": i[4], "task_difficulty": i[5]}
                     tasks.append(j_string)
         else:
             response_msg['err'] = result
@@ -837,7 +906,7 @@ async def get_lesson_tasks(request):
 
         return web.json_response(response_msg, headers=headers)
 
-async def get_post_text(request):
+async def get_post_info(request):
     headers = {'Access-Control-Allow-Origin': '*', }
     if request.method == 'POST':
         response_msg = {}
@@ -849,13 +918,57 @@ async def get_post_text(request):
         post_type = post['type']
 
         update_views = await handle(req='update_views', post_id=post_id, post_type=post_type)
-        print(update_views)
-        result = await handle(req='get_post_text', post_id=post_id, post_type=post_type)
+        result = await handle(req='get_post_info', post_id=post_id, post_type=post_type)
         if result != 'err':
-            print(result[0][0])
-            text = await format_to_article(result[0][0])
-            response_msg['post_text'] = text
-            response_msg['views'] = update_views[0][0]
+            print()
+            print('##################')
+            print()
+            print(f'{post_type}\n'
+                  f'#name:                          {result[0][0]}  \n'
+                  f'#desc:                          {result[0][1]} \n'
+                  f'#text:                          {result[0][2]} \n'
+                  f'#rate:                          {result[0][3]} \n'
+                  f'#tags\#task_difficulty:         {result[0][4]} \n'
+                  f'#views:                         {update_views[0][0]} \n'
+                  f'#lang\#news importance\#lesson: {result[0][5]} \n'
+                  f'#author:                        {result[0][6]}')
+
+            response_msg['views']               = update_views[0][0]  # views
+            response_msg['post_name']           = result[0][0] #name
+            response_msg['post_description']    = result[0][1] #desc
+            text = await format_to_article(result[0][2])
+            response_msg['post_text']           = text #text
+            response_msg['post_rate']           = result[0][3] #rate
+
+            if post_type != 'task':
+                response_msg['post_tags']       = result[0][4] #tags
+            elif post_type == 'task':
+                response_msg['task_difficulty'] = result[0][4]  #task_difficulty
+
+            if post_type != 'news':
+                response_msg['post_lang'] = result[0][5] #lang
+            elif post_type == 'news':
+                response_msg['news_importance'] = result[0][5] #news importance
+            elif post_type == 'task':
+                pass
+
+            response_msg['author']              = result[0][6] #author
+            if post_type == 'task':
+                print(f'#test input:                \n{result[0][7]}\n'
+                      f'#expected output:           \n{result[0][8]}')
+                response_msg['test_input']      = result[0][7] #test input
+                response_msg['expected_output'] = result[0][8] #expected output
+            if post_type == 'lesson':
+                task_arr = []
+                tasks = await handle(req='get_linked_tasks', post_id=post_id)
+                for task in tasks:
+                    j_string = {"task_id": task[0], "task_name": task[1], "task_difficulty": task[2]}
+                    task_arr.append(j_string)
+                print(f'#linked tasks:                  {task_arr}')
+                response_msg['linked_tasks'] = task_arr
+            print()
+            print('##################')
+            print()
 
         return web.json_response(response_msg, headers=headers)
 

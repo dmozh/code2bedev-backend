@@ -70,3 +70,10 @@ async def format_to_article(text):
 
 # i = input()
 # print(i)
+
+def check_lesson_ids_on_update_task(lesson_id, lesson_linked_id):
+    # last_cur_id = lesson_id
+    # last_new_id = lesson_linked_id
+    # print(f'{lesson_id}       {lesson_linked_id}')
+    if lesson_id == lesson_linked_id:
+        return True

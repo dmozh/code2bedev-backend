@@ -38,7 +38,7 @@ def setup_routes(app):
     app.router.add_route('POST', f'{crs.API}getLessonTasks', response.get_lesson_tasks)
     app.router.add_route('GET',  f'{crs.API}getNews', response.get_news)
 
-    app.router.add_route('POST', f'{crs.API}getPostText', response.get_post_text)
+    app.router.add_route('POST', f'{crs.API}getPostInfo', response.get_post_info)
 
     app.router.add_route('POST', f'{crs.API}executeCode', response.execute_request_to_jdoodle)
     app.router.add_route('POST', f'{crs.API}checkExecuteCode', response.request_to_jdoodle_with_check_valid)

@@ -51,7 +51,7 @@ async def handle(**kwargs):
             cursor.execute(sql_requests.SELECT_PROG_LANGS)
             result = cursor.fetchall()
         elif kwargs['req'] == 'get_user_lessons_name':
-            cursor.execute(sql_requests.SELECT_USER_LESSONS_NAME, [kwargs['user_email']])
+            cursor.execute(sql_requests.SELECT_USER_LESSONS_NAME, [kwargs['user_email'], kwargs['lang']])
             result = cursor.fetchall()
         elif kwargs['req'] == 'get_user_lessons':
             cursor.execute(sql_requests.SELECT_USER_LESSONS, [kwargs['user_email']])
@@ -89,18 +89,27 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'get_lesson_tasks':
             cursor.execute(sql_requests.SELECT_LESSON_TASKS, [kwargs['lesson_id']])
             result = cursor.fetchall()
-        elif kwargs['req'] == 'get_post_text':
+        elif kwargs['req'] == 'get_linked_tasks':
+            cursor.execute(sql_requests.SELECT_LINKED_TASKS, [kwargs['post_id']])
+            result = cursor.fetchall()
+        elif kwargs['req'] == 'get_links_tasks_to_lessons':
+            cursor.execute(sql_requests.SELECT_LINK_TASKS_TO_LESSONS, [kwargs['task_id']])
+            result = cursor.fetchall()
+        elif kwargs['req'] == 'get_lesson_name':
+            cursor.execute(sql_requests.SELECT_LESSON_NAME, [kwargs['lesson_id']])
+            result = cursor.fetchall()
+        elif kwargs['req'] == 'get_post_info':
             if kwargs['post_type'] == 'article':
-                cursor.execute(sql_requests.SELECT_ARTICLE_TEXT, [kwargs['post_id']])
+                cursor.execute(sql_requests.SELECT_ARTICLE_INFO, [kwargs['post_id']])
                 result = cursor.fetchall()
             elif kwargs['post_type'] == 'news':
-                cursor.execute(sql_requests.SELECT_NEWS_TEXT, [kwargs['post_id']])
+                cursor.execute(sql_requests.SELECT_NEWS_INFO, [kwargs['post_id']])
                 result = cursor.fetchall()
             elif kwargs['post_type'] == 'lesson':
-                cursor.execute(sql_requests.SELECT_LESSON_TEXT, [kwargs['post_id']])
+                cursor.execute(sql_requests.SELECT_LESSON_INFO, [kwargs['post_id']])
                 result = cursor.fetchall()
             elif kwargs['post_type'] == 'task':
-                cursor.execute(sql_requests.SELECT_TASK_TEXT, [kwargs['post_id']])
+                cursor.execute(sql_requests.SELECT_TASK_INFO, [kwargs['post_id']])
                 result = cursor.fetchall()
         elif kwargs['req'] == 'get_vote_state':
             if kwargs['post_type']   == 'article':
@@ -120,8 +129,8 @@ async def handle(**kwargs):
             try:
                 cursor.execute(sql_requests.INSERT_USER, (kwargs['user_name'], kwargs['user_email'], kwargs['user_rate']))
                 result = 'user added'
-            except psycopg2.IntegrityError:
-                result = 'user is exist'
+            except psycopg2.IntegrityError as e:
+                result = {'err_code': e.pgcode}
         elif kwargs['req'] == 'add_article':
             cursor.execute(sql_requests.INSERT_ARTICLE,
                           (kwargs['article_name'], kwargs['article_description'], kwargs['article_text'], kwargs['article_rate'],
@@ -137,9 +146,9 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'add_task':
             cursor.execute(sql_requests.INSERT_TASK,
                           (kwargs['task_name'], kwargs['task_description'], kwargs['task_text'], kwargs['task_rate'],
-                           kwargs['lesson_name'], kwargs['author_email'], kwargs['task_difficulty'],
-                           kwargs['task_test_input'], kwargs['task_expected_output']))
-            result = 'task added'
+                           kwargs['author_email'], kwargs['task_difficulty'],
+                           kwargs['task_test_input'], kwargs['task_expected_output'], kwargs['lang_id']))
+            result = True
             print(result)
         elif kwargs['req'] == 'add_news':
             cursor.execute(sql_requests.INSERT_NEWS,
@@ -166,8 +175,9 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'update_task':
             cursor.execute(sql_requests.UPDATE_TASK,
                            (kwargs['task_name'], kwargs['task_description'], kwargs['task_text'],
-                            kwargs['lesson_name'], kwargs['task_difficulty'], kwargs['task_id']))
-            result = 'task updated'
+                            kwargs['lang_name'], kwargs['task_difficulty'], kwargs['task_test_input'],
+                            kwargs['task_expected_output'], kwargs['task_id']))
+            result = True
         elif kwargs['req'] == 'update_decided_user_task':
             cursor.execute(sql_requests.UPDATE_TASK_DECIDED, (kwargs['is_decided'], kwargs['post_id'], kwargs['user_id']))
             result = True
@@ -188,10 +198,6 @@ async def handle(**kwargs):
                 cursor.execute(sql_requests.UPDATE_TASKS_VIEWS, [kwargs['post_id']])
                 cursor.execute(sql_requests.SELECT_TASK_VIEWS, [kwargs['post_id']])
                 result = cursor.fetchall()
-        elif kwargs['req'] == 'insert_seen_tasks':
-            cursor.execute(sql_requests.INSERT_SEEN_TASK,
-                           (kwargs['user_id'], kwargs['post_id'], kwargs['is_seen'], kwargs['is_decided']))
-            result = True
         elif kwargs['req'] == 'update_rate_task':
            if kwargs['vote_type'] == 'up':
                cursor.execute(sql_requests.UPDATE_TASK_PLUS_RATE, [kwargs['post_id']])
@@ -232,9 +238,15 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'update_vote_news':
             cursor.execute(sql_requests.UPDATE_NEWS_VOTE, (kwargs['up_vote'], kwargs['down_vote'], kwargs['post_id'], kwargs['user_id']))
             result = True
+        elif kwargs['req'] == 'update_link_task_to_lesson':
+            cursor.execute(sql_requests.UPDATE_LINK_TASK_TO_LESSON, (kwargs['new_l_id'], kwargs['task_id'], kwargs['task_id'], kwargs['lesson_id']))
         elif kwargs['req'] == 'insert_seen_lessons':
             cursor.execute(sql_requests.INSERT_SEEN_LESSON,
                            (kwargs['user_id'], kwargs['post_id'], kwargs['is_seen']))
+            result = True
+        elif kwargs['req'] == 'insert_seen_tasks':
+            cursor.execute(sql_requests.INSERT_SEEN_TASK,
+                           (kwargs['user_id'], kwargs['post_id'], kwargs['is_seen'], kwargs['is_decided']))
             result = True
         elif kwargs['req'] == 'insert_seen_articles':
             cursor.execute(sql_requests.INSERT_SEEN_ARTICLE,
@@ -256,6 +268,10 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'delete_task':
             cursor.execute(sql_requests.DELETE_TASK, (kwargs['author'], kwargs['task_id']))
             result = 'task deleted'
+        elif kwargs['req'] == 'delete_link_task_to_lesson':
+            cursor.execute(sql_requests.DELETE_LINK_TASK_TO_LESSON, (kwargs['lesson_id'], kwargs['task_id']))
+        elif kwargs['req'] == 'link_lessons_to_tasks':
+            cursor.execute(sql_requests.INSERT_TASK_TO_LESSON, [kwargs['task_name'], kwargs['lesson_id']])
         elif kwargs['req'] == 'test':
             cursor.execute(sql_requests.SELECT_USERS)
             result = cursor.fetchall()
@@ -274,15 +290,18 @@ async def handle(**kwargs):
     except psycopg2.DataError as e:
         print('data error code', e.pgcode)
         print(e)
-        return 'err'
+        msg = {'err_code': e.pgcode}
+        return msg
     except psycopg2.DatabaseError as e:
         print('database error code', e.pgcode)
         print(e)
-        return 'err'
+        msg = {'err_code': e.pgcode}
+        return msg
     except psycopg2.Error as e:
         print('error code', e)
         print(e)
-        return 'err'
+        msg = {'err_code': e.pgcode}
+        return msg
     finally:
         # завершение транзакции, закрытие подключения
         connection.commit()

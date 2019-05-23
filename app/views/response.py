@@ -140,12 +140,16 @@ async def add_lesson(request):
                         lesson_description=lesson_description,
                         lesson_text=lesson_text, lesson_rate=lesson_rate, author_email=author_email,
                         lesson_tags=lesson_tags)
-            for item in post['lessonTasks']:
-                result = await handle(req='add_task', lesson_name=lesson_name, task_name=item['taskName'],
+            if result:
+                lesson_id = await handle(req='get_lesson_id', lesson_name=lesson_name)
+                for item in post['lessonTasks']:
+                    result = await handle(req='add_task', lang_id=lesson_lang, task_name=item['taskName'],
                                 task_description=item['taskDescription'],
                                 task_text=item['taskText'], task_rate=0, author_email=author_email,
-                                task_difficulty=item['taskDifficulty'])
-                # response_msg['msg'] = result
+                                task_difficulty=item['taskDifficulty'], task_test_input=item['taskTestInput'], task_expected_output=item['taskExpectedOutput'])
+                    if result:
+                        await handle(req='link_lessons_to_tasks', lesson_id=lesson_id[0][0], task_name=item['taskName'])
+
         else:
             print('else')
             result = await handle(req='add_lesson', lesson_lang=lesson_lang, lesson_name=lesson_name,
@@ -305,7 +309,7 @@ async def update_user_task(request):
             if not lessons_ids:
                 print('net linkov')
                 for lesson in linked_lessons:
-                    await handle(req='link_lessons_to_tasks', lesson_id=lesson['id'], task_name=task_name)
+                    await handle(req='link_lessons_to_tasks', lesson_id=lesson['lesson_id'], task_name=task_name)
             else:
                 if linked_lessons:
                     length_cur_ids = len(lessons_ids)
@@ -956,13 +960,22 @@ async def get_post_info(request):
             if post_type == 'task':
                 print(f'#test input:                \n{result[0][7]}\n'
                       f'#expected output:           \n{result[0][8]}')
+                lesson_arr = []
+                _lesson_ids = await handle(req='get_links_tasks_to_lessons_post_info', post_id=post_id, post_type=post_type)
+                for _lesson_id in _lesson_ids:
+                    cur_lesson = await handle(req='get_lesson_short_info', lesson_id=_lesson_id[0])
+                    j_string = {"lesson_id": cur_lesson[0][0], "lesson_name": cur_lesson[0][1]}
+                    lesson_arr.append(j_string)
                 response_msg['test_input']      = result[0][7] #test input
                 response_msg['expected_output'] = result[0][8] #expected output
+                response_msg['linked_lessons'] = lesson_arr
+                print(f'#linked tasks:                  {lesson_arr}')
             if post_type == 'lesson':
                 task_arr = []
-                tasks = await handle(req='get_linked_tasks', post_id=post_id)
-                for task in tasks:
-                    j_string = {"task_id": task[0], "task_name": task[1], "task_difficulty": task[2]}
+                _task_ids = await handle(req='get_links_tasks_to_lessons_post_info', post_id=post_id, post_type=post_type)
+                for _task_id in _task_ids:
+                    cur_task = await handle(req='get_task_short_info', task_id=_task_id[0])
+                    j_string = {"task_id": cur_task[0][0], "task_name": cur_task[0][1], "task_difficulty": cur_task[0][2]}
                     task_arr.append(j_string)
                 print(f'#linked tasks:                  {task_arr}')
                 response_msg['linked_tasks'] = task_arr

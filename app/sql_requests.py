@@ -99,16 +99,25 @@ SELECT_LANG_TASKS = "select tasks.task_id, tasks.task_name, tasks.task_descripti
                     "left outer join programming_langs on (programming_langs.lang_id = tasks.lang_id) " \
                     "where programming_langs.lang_name = %s"
 
-SELECT_LESSON_TASKS = "select * from tasks " \
+SELECT_LESSON_TASKS = "select task_id from tasks_to_lessons " \
                       "where lesson_id = %s;"
 
-SELECT_LINKED_TASKS = "select task_id, task_name, task_difficulty " \
-                      "from tasks " \
-                      "where lesson_id=%s;"
+SELECT_SHORT_TASK_INFO = "select task_id, task_name, task_difficulty " \
+                         "from tasks " \
+                         "where task_id=%s;"
+
+SELECT_TASK_LESSONS = "select lesson_id from tasks_to_lessons " \
+                      "where task_id = %s;"
+
+SELECT_SHORT_LESSON_INFO = "select lesson_id, lesson_name " \
+                         "from lessons " \
+                         "where lesson_id=%s;"
 
 SELECT_LINK_TASKS_TO_LESSONS = "select lesson_id from tasks_to_lessons where task_id = %s"
 
-SELECT_LESSON_NAME = "select lesson_name from lessons where lesson_id = %s"
+SELECT_LESSON_NAME = "select lesson_name from lessons where lesson_id = %s;"
+
+SELECT_LESSON_ID =  "select lesson_id from lessons where lesson_name = %s;"
 
 SELECT_ARTICLE_INFO = "select articles.article_name, articles.article_description, articles.article_text, " \
                       "articles.article_rate, articles.article_tags, programming_langs.lang_name, " \

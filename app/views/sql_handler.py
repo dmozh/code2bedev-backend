@@ -86,17 +86,27 @@ async def handle(**kwargs):
             else:
                 cursor.execute(sql_requests.SELECT_LANG_TASKS, [kwargs['lang']])
             result = cursor.fetchall()
-        elif kwargs['req'] == 'get_lesson_tasks':
-            cursor.execute(sql_requests.SELECT_LESSON_TASKS, [kwargs['lesson_id']])
+        elif kwargs['req'] == 'get_links_tasks_to_lessons_post_info':
+            if kwargs['post_type'] == 'lesson':
+                cursor.execute(sql_requests.SELECT_LESSON_TASKS, [kwargs['post_id']])
+                result = cursor.fetchall()
+            elif kwargs['post_type'] == 'task':
+                cursor.execute(sql_requests.SELECT_TASK_LESSONS, [kwargs['post_id']])
+                result = cursor.fetchall()
+        elif kwargs['req'] == 'get_task_short_info':
+            cursor.execute(sql_requests.SELECT_SHORT_TASK_INFO, [kwargs['task_id']])
             result = cursor.fetchall()
-        elif kwargs['req'] == 'get_linked_tasks':
-            cursor.execute(sql_requests.SELECT_LINKED_TASKS, [kwargs['post_id']])
+        elif kwargs['req'] == 'get_lesson_short_info':
+            cursor.execute(sql_requests.SELECT_SHORT_LESSON_INFO, [kwargs['lesson_id']])
             result = cursor.fetchall()
         elif kwargs['req'] == 'get_links_tasks_to_lessons':
             cursor.execute(sql_requests.SELECT_LINK_TASKS_TO_LESSONS, [kwargs['task_id']])
             result = cursor.fetchall()
         elif kwargs['req'] == 'get_lesson_name':
             cursor.execute(sql_requests.SELECT_LESSON_NAME, [kwargs['lesson_id']])
+            result = cursor.fetchall()
+        elif kwargs['req'] == 'get_lesson_id':
+            cursor.execute(sql_requests.SELECT_LESSON_ID, [kwargs['lesson_name']])
             result = cursor.fetchall()
         elif kwargs['req'] == 'get_post_info':
             if kwargs['post_type'] == 'article':
@@ -135,13 +145,13 @@ async def handle(**kwargs):
             cursor.execute(sql_requests.INSERT_ARTICLE,
                           (kwargs['article_name'], kwargs['article_description'], kwargs['article_text'], kwargs['article_rate'],
                            kwargs['article_lang'], kwargs['author_email'], kwargs['article_tags']))
-            result = 'article added'
+            result = True
             print(result)
         elif kwargs['req'] == 'add_lesson':
             cursor.execute(sql_requests.INSERT_LESSON,
                           (kwargs['lesson_name'], kwargs['lesson_description'], kwargs['lesson_text'], kwargs['lesson_rate'],
                            kwargs['lesson_lang'], kwargs['author_email'], kwargs['lesson_tags']))
-            result = 'lesson added'
+            result = True
             print(result)
         elif kwargs['req'] == 'add_task':
             cursor.execute(sql_requests.INSERT_TASK,
@@ -154,24 +164,24 @@ async def handle(**kwargs):
             cursor.execute(sql_requests.INSERT_NEWS,
                            (kwargs['news_name'], kwargs['news_description'], kwargs['news_text'], kwargs['news_rate'],
                                 kwargs['user_email'], kwargs['news_tags'], kwargs['news_importance']))
-            result = 'news added'
+            result = True
             print(result)
         elif kwargs['req'] == 'update_article':
             cursor.execute(sql_requests.UPDATE_ARTICLE,
                            (kwargs['article_name'], kwargs['article_description'], kwargs['article_text'], kwargs['article_lang'],
                             kwargs['article_tags'], kwargs['article_id']))
-            result = 'article updated'
+            result = True
         elif kwargs['req'] == 'update_news':
             cursor.execute(sql_requests.UPDATE_NEWS,
                            (kwargs['news_name'], kwargs['news_description'], kwargs['news_text'],
                             kwargs['news_tags'],
                             kwargs['news_importance'], kwargs['news_id']))
-            result = 'news updated'
+            result = True
         elif kwargs['req'] == 'update_lesson':
             cursor.execute(sql_requests.UPDATE_LESSON,
                            (kwargs['lesson_name'], kwargs['lesson_description'], kwargs['lesson_text'],
                             kwargs['lesson_lang'], kwargs['lesson_tags'], kwargs['lesson_id']))
-            result = 'lesson updated'
+            result = True
         elif kwargs['req'] == 'update_task':
             cursor.execute(sql_requests.UPDATE_TASK,
                            (kwargs['task_name'], kwargs['task_description'], kwargs['task_text'],
@@ -283,7 +293,7 @@ async def handle(**kwargs):
         print('integrity error code', e.pgcode)
         print(e)
         if e.pgcode == '23505':
-            msg = {'err_code': e.pgcode, 'err_info': 'Ошибка пост с тамим именем уже существует'}
+            msg = {'err_code': e.pgcode, 'err_info': 'Данное имя поста уже существует.'}
             return msg
         else:
             return 'err'

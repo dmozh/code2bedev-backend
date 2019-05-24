@@ -55,45 +55,51 @@ SELECT_USER_NEWS = "SELECT news_id, news_name, news_description, news_text, news
                    "WHERE author_id = (SELECT user_id FROM users WHERE user_email = %s)"
 
 SELECT_ALL_ARTICLES = "select articles.article_id, articles.article_name, articles.article_description, " \
-                      "articles.article_rate, articles.article_tags, users.user_name, programming_langs.lang_name " \
+                      "articles.article_rate, articles.article_tags, users.user_name, programming_langs.lang_name, " \
+                      "articles.added_time, articles.last_update " \
                       "from articles " \
                       "left outer join users on (articles.author_id = users.user_id) " \
                       "left outer join programming_langs on (articles.lang_id = programming_langs.lang_id) "
 
 SELECT_ALL_NEWS = "select news.news_id, news.news_name, news.news_description, " \
-                  "news.news_rate, news.news_tags, news.news_importance, users.user_name " \
+                  "news.news_rate, news.news_tags, news.news_importance, users.user_name," \
+                  "news.added_time, news.last_update " \
                   "from news " \
                   "left outer join users on (news.author_id = users.user_id) "
 
 SELECT_ALL_TASKS = "select tasks.task_id, tasks.task_name, tasks.task_description, tasks.task_rate, " \
                    "users.user_name, tasks.task_difficulty, " \
-                   "programming_langs.lang_name " \
+                   "programming_langs.lang_name, tasks.added_time, tasks.last_update  " \
                    "from tasks  " \
                    "left outer join users on (users.user_id = tasks.author_id) " \
                    "left outer join programming_langs on (programming_langs.lang_id = tasks.lang_id)"
 
 SELECT_ALL_LESSONS = "select lessons.lesson_id, lessons.lesson_name, lessons.lesson_description, " \
-                      "lessons.lesson_rate, lessons.lesson_tags, users.user_name, programming_langs.lang_name " \
+                      "lessons.lesson_rate, lessons.lesson_tags, users.user_name, programming_langs.lang_name, " \
+                      "lessons.added_time, lessons.last_update " \
                       "from lessons " \
                       "left outer join users on (lessons.author_id = users.user_id) " \
                       "left outer join programming_langs on (lessons.lang_id = programming_langs.lang_id) "
 
 SELECT_LANG_ARTICLES = "select articles.article_id, articles.article_name, articles.article_description, " \
-                       "articles.article_rate, articles.article_tags, users.user_name " \
+                       "articles.article_rate, articles.article_tags, users.user_name, articles.added_time, " \
+                       "articles.last_update " \
                        "from articles " \
                        "left outer join users on (articles.author_id = users.user_id) " \
                        "left outer join programming_langs on (articles.lang_id = programming_langs.lang_id) " \
                        "where programming_langs.lang_name = %s"
 
 SELECT_LANG_LESSONS = "select lessons.lesson_id, lessons.lesson_name, lessons.lesson_description, " \
-                      "lessons.lesson_rate, lessons.lesson_tags, users.user_name " \
+                      "lessons.lesson_rate, lessons.lesson_tags, users.user_name," \
+                      "lessons.added_time, lessons.last_update " \
                       "from lessons " \
                       "left outer join users on (lessons.author_id = users.user_id) " \
                       "left outer join programming_langs on (lessons.lang_id = programming_langs.lang_id) " \
                       "where programming_langs.lang_name = %s"
 
 SELECT_LANG_TASKS = "select tasks.task_id, tasks.task_name, tasks.task_description, tasks.task_rate, " \
-                    "users.user_name, tasks.task_difficulty " \
+                    "users.user_name, tasks.task_difficulty, " \
+                    "tasks.added_time, tasks.last_update " \
                     "from tasks  " \
                     "left outer join users on (users.user_id = tasks.author_id) " \
                     "left outer join programming_langs on (programming_langs.lang_id = tasks.lang_id) " \
@@ -121,27 +127,27 @@ SELECT_LESSON_ID =  "select lesson_id from lessons where lesson_name = %s;"
 
 SELECT_ARTICLE_INFO = "select articles.article_name, articles.article_description, articles.article_text, " \
                       "articles.article_rate, articles.article_tags, programming_langs.lang_name, " \
-                      "users.user_name " \
+                      "users.user_name, articles.added_time, articles.last_update " \
                       "from articles " \
                       "left outer join users on (articles.author_id = users.user_id) " \
                       "left outer join programming_langs on (articles.lang_id = programming_langs.lang_id) " \
                       "where article_id = %s;"
 
 SELECT_NEWS_INFO = "select news.news_name, news.news_description, news.news_text, news.news_rate, news.news_tags, " \
-                   "news.news_importance, users.user_name " \
+                   "news.news_importance, users.user_name, news.added_time, news.last_update " \
                    "from news " \
                    "left outer join users on (news.author_id = users.user_id) " \
                    "where news_id = %s;"
 
 SELECT_LESSON_INFO = "select lessons.lesson_name, lessons.lesson_description, lessons.lesson_text, lessons.lesson_rate, " \
-                     "lessons.lesson_tags, programming_langs.lang_name, users.user_name " \
+                     "lessons.lesson_tags, programming_langs.lang_name, users.user_name, lessons.added_time, lessons.last_update " \
                      "from lessons " \
                      "left outer join users on (lessons.author_id = users.user_id) " \
                      "left outer join programming_langs on (lessons.lang_id = programming_langs.lang_id)" \
                      "where lesson_id = %s;"
 
 SELECT_TASK_INFO = "select tasks.task_name, tasks.task_description, tasks.task_text, tasks.task_rate, " \
-                   "tasks.task_difficulty, programming_langs.lang_name, users.user_name, tasks.test_input, tasks.expected_output " \
+                   "tasks.task_difficulty, programming_langs.lang_name, users.user_name, tasks.added_time, tasks.last_update, tasks.test_input, tasks.expected_output " \
                    "from tasks " \
                    "left outer join users on (tasks.author_id = users.user_id) " \
                    "left outer join programming_langs on (tasks.lang_id = programming_langs.lang_id)" \
@@ -155,14 +161,16 @@ SELECT_USER_TO_ARTICLE_VOTES = """select "upVote", "downVote" from users_to_arti
 
 SELECT_USER_TO_NEWS_VOTES = """select "upVote", "downVote" from users_to_news where user_id = %s and news_id=%s"""
 
-INSERT_USER = "INSERT INTO users (user_role, user_name, user_email, user_rate) " \
+INSERT_USER = "INSERT INTO users (user_role, user_name, user_email, user_rate, added_time, last_update) " \
               "VALUES (" \
                 "(SELECT role_num from roles where role_name='User'), " \
                 "%s, " \
                 "%s, " \
-                "%s)"
+                "%s, " \
+                "%s, " \
+                "%s);"
 
-INSERT_NEWS = "INSERT INTO news (news_name, news_description, news_text, news_rate, author_id, news_tags, news_importance) " \
+INSERT_NEWS = "INSERT INTO news (news_name, news_description, news_text, news_rate, author_id, news_tags, news_importance, added_time, last_update) " \
               "VALUES (" \
                 "%s, " \
                 "%s, " \
@@ -170,9 +178,11 @@ INSERT_NEWS = "INSERT INTO news (news_name, news_description, news_text, news_ra
                 "%s, " \
                 "(SELECT user_id from users where user_email=%s), " \
                 "%s, " \
-                "%s)"
+                "%s," \
+                "%s," \
+                "%s);"
 
-INSERT_ARTICLE = "INSERT INTO articles (article_name, article_description, article_text, article_rate, lang_id, author_id, article_tags) " \
+INSERT_ARTICLE = "INSERT INTO articles (article_name, article_description, article_text, article_rate, lang_id, author_id, article_tags, added_time, last_update) " \
               "VALUES (" \
                 "%s, " \
                 "%s, " \
@@ -180,9 +190,11 @@ INSERT_ARTICLE = "INSERT INTO articles (article_name, article_description, artic
                 "%s," \
                 "(SELECT lang_id from programming_langs where lang_name=%s)," \
                 "(SELECT user_id from users where user_email=%s)," \
+                "%s," \
+                "%s," \
                 "%s)"
 
-INSERT_LESSON = "INSERT INTO lessons (lesson_name, lesson_description, lesson_text, lesson_rate, lang_id, author_id, lesson_tags) " \
+INSERT_LESSON = "INSERT INTO lessons (lesson_name, lesson_description, lesson_text, lesson_rate, lang_id, author_id, lesson_tags, added_time, last_update) " \
               "VALUES (" \
                 "%s, " \
                 "%s, " \
@@ -190,9 +202,11 @@ INSERT_LESSON = "INSERT INTO lessons (lesson_name, lesson_description, lesson_te
                 "%s," \
                 "(SELECT lang_id from programming_langs where lang_name=%s)," \
                 "(SELECT user_id from users where user_email=%s)," \
-                "%s)"
+                "%s," \
+                "%s," \
+                "%s);"
 
-INSERT_TASK = "INSERT INTO tasks (task_name, task_description, task_text, task_rate, author_id, task_difficulty, test_input, expected_output, lang_id) " \
+INSERT_TASK = "INSERT INTO tasks (task_name, task_description, task_text, task_rate, author_id, task_difficulty, test_input, expected_output, lang_id, added_time, last_update) " \
               "VALUES (" \
                 "%s, " \
                 "%s, " \
@@ -202,7 +216,9 @@ INSERT_TASK = "INSERT INTO tasks (task_name, task_description, task_text, task_r
                 "%s," \
                 "%s," \
                 "%s," \
-                "(SELECT lang_id from programming_langs where lang_name=%s));" \
+                "(SELECT lang_id from programming_langs where lang_name=%s)," \
+                "%s," \
+                "%s);" \
 
 INSERT_SEEN_TASK =  """INSERT INTO users_to_tasks (user_id, task_id, "isSeen", "isDecided") VALUES (%s, %s, %s, %s)"""
 
@@ -221,7 +237,8 @@ UPDATE_ARTICLE = "UPDATE articles SET " \
                  "article_description = %s, " \
                  "article_text = %s, " \
                  "lang_id = (SELECT lang_id from programming_langs WHERE lang_name = %s), " \
-                 "article_tags = %s " \
+                 "article_tags = %s," \
+                 "last_update = %s " \
                  "WHERE article_id = %s"
 
 UPDATE_NEWS = "UPDATE news SET " \
@@ -230,6 +247,7 @@ UPDATE_NEWS = "UPDATE news SET " \
                  "news_text = %s, " \
                  "news_tags = %s," \
                  "news_importance = %s," \
+                 "last_update = %s " \
                  "WHERE news_id = %s"
 
 UPDATE_LESSON = "UPDATE lessons SET " \
@@ -237,7 +255,8 @@ UPDATE_LESSON = "UPDATE lessons SET " \
                  "lesson_description = %s, " \
                  "lesson_text = %s, " \
                  "lang_id = (SELECT lang_id from programming_langs WHERE lang_name = %s), " \
-                 "lesson_tags = %s " \
+                 "lesson_tags = %s," \
+                 "last_update = %s " \
                  "WHERE lesson_id = %s"
 
 UPDATE_TASK = "UPDATE tasks SET " \
@@ -247,7 +266,8 @@ UPDATE_TASK = "UPDATE tasks SET " \
                  "lang_id = (SELECT lang_id from programming_langs WHERE lang_name = %s), " \
                  "task_difficulty = %s, " \
                  "test_input = %s, " \
-                 "expected_output = %s " \
+                 "expected_output = %s," \
+                 "last_update = %s " \
                  "WHERE task_id = %s"
 
 UPDATE_TASK_DECIDED = """UPDATE users_to_tasks SET "isDecided"=%s WHERE task_id=%s AND user_id=%s"""

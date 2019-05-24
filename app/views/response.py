@@ -1,5 +1,5 @@
 from aiohttp import web
-import json
+import json, datetime
 # from app import sql_requests
 from .sql_handler import handle
 import requests, credentials
@@ -9,19 +9,11 @@ from .processings_functions import format_to_article, check_lesson_ids_on_update
 # TODO сделать хотя бы базовое шифрование и дешифрование передавеммых данных
 async def test(request):
     # result = await handle(req='test')
-    # print(result)
-    # users = []
-    # j_response = {}
-    # if result != psycopg2.Error:
-    #     for i in result:
-    #         j_string = {"user": {"id": i[0], "role_id": i[1], "user_name": i[2], "user_email": 's00per s3cr3t', "user_rate": i[4]}}
-    #         users.append(j_string)
-    #
-    # j_response["users"]=users
-    # print(request.method)
+    time = datetime.datetime.today()
+    print(time)
     headers = {'Access-Control-Allow-Origin': '*', 'content-type': 'text/html'}
     # response = "<div><p><b>kokoko</b></p></div>"
-    response = '<script>alert("aoaoaao")</script>'
+    response = f'<div>{time}</div>'
     return web.Response(body=response, headers=headers)
 
 
@@ -42,12 +34,13 @@ async def add_article(request):
         article_rate = 0
         author_email = post['authorEmail']
         article_tags = []
+        time = datetime.datetime.today()
 
         for i in post['articleTags']:
             article_tags.append(i['name'])
         print(article_tags)
         result = await handle(req='add_article', article_lang=article_lang, article_name=article_name, article_description=article_description,
-                        article_text=article_text, article_rate=article_rate, author_email=author_email,article_tags=article_tags)
+                        article_text=article_text, article_rate=article_rate, author_email=author_email,article_tags=article_tags, time=time)
         response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
@@ -71,11 +64,14 @@ async def add_news(request):
         news_rate = 0
         author_email = post['authorEmail']
         news_tags = []
+        time = datetime.datetime.today()
 
         for i in post['newsTags']:
             news_tags.append(i['name'])
         print(news_tags)
-        result = await handle(req='add_news', news_name=news_name, news_description=news_description, news_text=news_text, news_rate=news_rate, user_email=author_email, news_tags=news_tags, news_importance=news_importance)
+        result = await handle(req='add_news', news_name=news_name, news_description=news_description, news_text=news_text,
+                              news_rate=news_rate, user_email=author_email, news_tags=news_tags,
+                              news_importance=news_importance, time=time)
         response_msg['msg'] = result
         return web.json_response(response_msg, headers=headers)
     else:
@@ -100,11 +96,13 @@ async def add_task(request):
         task_rate = 0
         author_email = post['authorEmail']
         task_difficulty = post['difficulty']
+        time = datetime.datetime.today()
         linked_lessons = post['linkedLessons']
         result = await handle(req='add_task', task_name=task_name, lang_id=lang_id,
                         task_description=task_description,
                         task_text=task_text, task_rate=task_rate, author_email=author_email,
-                        task_difficulty=task_difficulty, task_test_input=task_test_input, task_expected_output=task_expected_output)
+                        task_difficulty=task_difficulty, task_test_input=task_test_input,
+                              task_expected_output=task_expected_output, time=time)
         if result:
             for lesson in linked_lessons:
                 await handle(req='link_lessons_to_tasks', lesson_id=lesson['lesson_id'], task_name=task_name)
@@ -130,7 +128,7 @@ async def add_lesson(request):
         lesson_rate = 0
         author_email = post['authorEmail']
         lesson_tags = []
-
+        time = datetime.datetime.today()
         for i in post['lessonTags']:
             lesson_tags.append(i['name'])
         print(lesson_tags)
@@ -139,23 +137,24 @@ async def add_lesson(request):
             result = await handle(req='add_lesson', lesson_lang=lesson_lang, lesson_name=lesson_name,
                         lesson_description=lesson_description,
                         lesson_text=lesson_text, lesson_rate=lesson_rate, author_email=author_email,
-                        lesson_tags=lesson_tags)
+                        lesson_tags=lesson_tags, time=time)
             if result:
                 lesson_id = await handle(req='get_lesson_id', lesson_name=lesson_name)
                 for item in post['lessonTasks']:
-                    result = await handle(req='add_task', lang_id=lesson_lang, task_name=item['taskName'],
+                    _result = await handle(req='add_task', lang_id=lesson_lang, task_name=item['taskName'],
                                 task_description=item['taskDescription'],
                                 task_text=item['taskText'], task_rate=0, author_email=author_email,
-                                task_difficulty=item['taskDifficulty'], task_test_input=item['taskTestInput'], task_expected_output=item['taskExpectedOutput'])
-                    if result:
+                                task_difficulty=item['taskDifficulty'], task_test_input=item['taskTestInput'],
+                                          task_expected_output=item['taskExpectedOutput'], time=time)
+                    if _result:
                         await handle(req='link_lessons_to_tasks', lesson_id=lesson_id[0][0], task_name=item['taskName'])
-
+            response_msg['msg'] = result
         else:
             print('else')
             result = await handle(req='add_lesson', lesson_lang=lesson_lang, lesson_name=lesson_name,
                         lesson_description=lesson_description,
                         lesson_text=lesson_text, lesson_rate=lesson_rate, author_email=author_email,
-                        lesson_tags=lesson_tags)
+                        lesson_tags=lesson_tags, time=time)
             response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
@@ -173,11 +172,12 @@ async def add_user(request):
 
         user_name    = post['userName']
         user_email   = post['userEmail']
+        time = datetime.datetime.today()
 
         result = await handle(req='get_valid_name', user_name=user_name, user_email=user_email)
         if result['valid']:
             user_rate = 0
-            result = await handle(req='add_user', user_name=user_name, user_email=user_email, user_rate=user_rate)
+            result = await handle(req='add_user', user_name=user_name, user_email=user_email, user_rate=user_rate, time=time)
             response_msg['valid'] = True
             response_msg['msg'] = result
         else:
@@ -225,6 +225,7 @@ async def update_user_article(request):
         article_text = post['articleText']
         article_id = post['articleId']
         article_tags = []
+        time = datetime.datetime.today()
 
         for i in post['articleTags']:
             article_tags.append(i['name'])
@@ -234,7 +235,8 @@ async def update_user_article(request):
                               article_text=article_text,
                               article_lang=article_lang,
                               article_tags=article_tags,
-                              article_id=article_id)
+                              article_id=article_id,
+                              last_update=time)
         response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
@@ -257,7 +259,7 @@ async def update_user_news(request):
         news_id = post['newsId']
         news_importance=post['importance']
         news_tags = []
-
+        time = datetime.datetime.today()
         for i in post['newsTags']:
             news_tags.append(i['name'])
         print(news_tags)
@@ -266,7 +268,8 @@ async def update_user_news(request):
                               news_text=news_text,
                               news_importance=news_importance,
                               news_tags=news_tags,
-                              news_id=news_id)
+                              news_id=news_id,
+                              last_update=time)
         response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
@@ -292,7 +295,7 @@ async def update_user_task(request):
         task_test_input = post['testInput']
         task_expected_output = post['expectedOutput']
         linked_lessons = post['linkedLessons']
-
+        time = datetime.datetime.today()
         result = await handle(req='update_task', task_name=task_name,
                               task_description=task_description,
                               task_text=task_text,
@@ -300,7 +303,8 @@ async def update_user_task(request):
                               task_difficulty=task_difficulty,
                               task_id=task_id,
                               task_test_input=task_test_input,
-                              task_expected_output=task_expected_output)
+                              task_expected_output=task_expected_output,
+                              last_update=time)
         if result:
             lessons_ids = await handle(req='get_links_tasks_to_lessons', task_id=task_id)
 
@@ -380,7 +384,7 @@ async def update_user_lesson(request):
         lesson_text = post['lessonText']
         lesson_id = post['lessonId']
         lesson_tags = []
-
+        time = datetime.datetime.today()
         for i in post['lessonTags']:
             lesson_tags.append(i['name'])
         print(lesson_tags)
@@ -389,7 +393,8 @@ async def update_user_lesson(request):
                               lesson_text=lesson_text,
                               lesson_lang=lesson_lang,
                               lesson_tags=lesson_tags,
-                              lesson_id=lesson_id)
+                              lesson_id=lesson_id,
+                              last_update=time)
         response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
@@ -780,18 +785,21 @@ async def get_articles(request):
                     #
                     # text = await format_to_article(i[3])
                     j_string = {"article_id": i[0], "article_name": i[1], "article_description": i[2], #"article_text": text,
-                            "article_rate": i[3], "article_tags": i[4], "author": i[5], "lang": i[6]}
+                                "article_rate": i[3], "article_tags": i[4], "author": i[5], "lang": i[6],
+                                "added_time": i[7].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M:%S')}
                     articles.append(j_string)
             else:
                 for i in result:
                     # text = await format_to_article(i[3])
                     j_string = {"article_id": i[0], "article_name": i[1], "article_description": i[2], #"article_text": text,
-                            "article_rate": i[3], "article_tags": i[4], "author": i[5]}
+                                "article_rate": i[3], "article_tags": i[4], "author": i[5],
+                                "added_time": i[6].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[7].strftime('%d.%m.%Y  %H:%M:%S')}
                     articles.append(j_string)
         else:
             response_msg['err'] = result
 
         response_msg['articles'] = articles
+        print(response_msg)
 
         return web.json_response(response_msg, headers=headers)
 
@@ -814,19 +822,21 @@ async def get_lessons(request):
                 for i in result:
                     j_string = {"lesson_id": i[0], "lesson_name": i[1], "lesson_description": i[2],
                                 # "lesson_text": i[3],
-                                "lesson_rate": i[3], "lesson_tags": i[4], "author": i[5], "lang": i[6]}
+                                "lesson_rate": i[3], "lesson_tags": i[4], "author": i[5], "lang": i[6],
+                                "added_time": i[7].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M:%S')}
                     lessons.append(j_string)
             else:
                 for i in result:
                     j_string = {"lesson_id": i[0], "lesson_name": i[1], "lesson_description": i[2],
                                 # "lesson_text": i[3],
-                                "lesson_rate": i[3], "lesson_tags": i[4], "author": i[5]}
+                                "lesson_rate": i[3], "lesson_tags": i[4], "author": i[5],
+                                "added_time": i[6].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[7].strftime('%d.%m.%Y  %H:%M:%S')}
                     lessons.append(j_string)
         else:
             response_msg['err'] = result
 
         response_msg['lessons'] = lessons
-
+        print(response_msg)
         return web.json_response(response_msg, headers=headers)
 
 async def get_tasks(request):
@@ -847,18 +857,20 @@ async def get_tasks(request):
             if lang is None:
                 for i in result:
                     j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2],
-                                "task_rate": i[3], "author": i[4], "task_difficulty": i[5], "lang": i[6]}
+                                "task_rate": i[3], "author": i[4], "task_difficulty": i[5], "lang": i[6],
+                                "added_time": i[7].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M:%S')}
                     tasks.append(j_string)
             else:
                 for i in result:
                     j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2],
-                                "task_rate": i[3], "author": i[4], "task_difficulty": i[5]}
+                                "task_rate": i[3], "author": i[4], "task_difficulty": i[5],
+                                "added_time": i[6].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[7].strftime('%d.%m.%Y  %H:%M:%S')}
                     tasks.append(j_string)
         else:
             response_msg['err'] = result
 
         response_msg['tasks'] = tasks
-
+        print(response_msg)
         return web.json_response(response_msg, headers=headers)
 
 async def get_news(request):
@@ -874,41 +886,42 @@ async def get_news(request):
             for i in result:
                 j_string = {"news_id": i[0], "news_name": i[1], "news_description": i[2],
                             # "news_text": i[3],
-                            "news_rate": i[3], "news_tags": i[4], "news_importance": i[5] ,"author": i[6]}
+                            "news_rate": i[3], "news_tags": i[4], "news_importance": i[5] ,"author": i[6],
+                            "added_time": i[7].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M:%S')}
                 news.append(j_string)
         else:
             response_msg['err'] = result
 
         response_msg['news'] = news
-
+        print(response_msg)
         return web.json_response(response_msg, headers=headers)
 
-async def get_lesson_tasks(request):
-    headers = {'Access-Control-Allow-Origin': '*',}
-    if request.method == 'POST':
-        response_msg = {}
-
-        # get body req
-        post = await request.json()
-        lesson_id = post['lessonId']
-
-        print(request.method)
-        print(post)
-        result = await handle(req='get_lesson_tasks', lesson_id=lesson_id)
-        tasks = []
-
-        if result != 'err':
-            for i in result:
-                j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2],
-                            "task_text": i[3],
-                            "task_rate": i[4], "task_difficulty": i[5]}
-                tasks.append(j_string)
-        else:
-            response_msg['err'] = result
-
-        response_msg['tasks'] = tasks
-
-        return web.json_response(response_msg, headers=headers)
+# async def get_lesson_tasks(request):
+#     headers = {'Access-Control-Allow-Origin': '*',}
+#     if request.method == 'POST':
+#         response_msg = {}
+#
+#         # get body req
+#         post = await request.json()
+#         lesson_id = post['lessonId']
+#
+#         print(request.method)
+#         print(post)
+#         result = await handle(req='get_lesson_tasks', lesson_id=lesson_id)
+#         tasks = []
+#
+#         if result != 'err':
+#             for i in result:
+#                 j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2],
+#                             "task_text": i[3],
+#                             "task_rate": i[4], "task_difficulty": i[5]}
+#                 tasks.append(j_string)
+#         else:
+#             response_msg['err'] = result
+#
+#         response_msg['tasks'] = tasks
+#
+#         return web.json_response(response_msg, headers=headers)
 
 async def get_post_info(request):
     headers = {'Access-Control-Allow-Origin': '*', }
@@ -935,7 +948,9 @@ async def get_post_info(request):
                   f'#tags\#task_difficulty:         {result[0][4]} \n'
                   f'#views:                         {update_views[0][0]} \n'
                   f'#lang\#news importance\#lesson: {result[0][5]} \n'
-                  f'#author:                        {result[0][6]}')
+                  f'#author:                        {result[0][6]} \n'
+                  f'#added time:                    {result[0][7]} \n'
+                  f'#last update:                   {result[0][8]} \n')
 
             response_msg['views']               = update_views[0][0]  # views
             response_msg['post_name']           = result[0][0] #name
@@ -956,18 +971,20 @@ async def get_post_info(request):
             elif post_type == 'task':
                 pass
 
-            response_msg['author']              = result[0][6] #author
+            response_msg['author']              = result[0][6]  #author
+            response_msg['added_time']          = result[0][7].strftime('%d.%m.%Y  %H:%M:%S')  # added time
+            response_msg['last_update']         = result[0][8].strftime('%d.%m.%Y  %H:%M:%S')  # last update
             if post_type == 'task':
-                print(f'#test input:                \n{result[0][7]}\n'
-                      f'#expected output:           \n{result[0][8]}')
+                print(f'#test input:                \n{result[0][9]}\n'
+                      f'#expected output:           \n{result[0][10]}')
                 lesson_arr = []
                 _lesson_ids = await handle(req='get_links_tasks_to_lessons_post_info', post_id=post_id, post_type=post_type)
                 for _lesson_id in _lesson_ids:
                     cur_lesson = await handle(req='get_lesson_short_info', lesson_id=_lesson_id[0])
                     j_string = {"lesson_id": cur_lesson[0][0], "lesson_name": cur_lesson[0][1]}
                     lesson_arr.append(j_string)
-                response_msg['test_input']      = result[0][7] #test input
-                response_msg['expected_output'] = result[0][8] #expected output
+                response_msg['test_input']      = result[0][9] #test input
+                response_msg['expected_output'] = result[0][10] #expected output
                 response_msg['linked_lessons'] = lesson_arr
                 print(f'#linked tasks:                  {lesson_arr}')
             if post_type == 'lesson':
@@ -979,6 +996,7 @@ async def get_post_info(request):
                     task_arr.append(j_string)
                 print(f'#linked tasks:                  {task_arr}')
                 response_msg['linked_tasks'] = task_arr
+            # print(f'')
             print()
             print('##################')
             print()

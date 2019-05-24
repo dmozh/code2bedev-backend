@@ -137,56 +137,57 @@ async def handle(**kwargs):
         # TODO в add запросах result должен возвращать состояние запроса успешно, исключение или ошибка, если ошибка/исключение, то её описание,
         elif kwargs['req'] == 'add_user':
             try:
-                cursor.execute(sql_requests.INSERT_USER, (kwargs['user_name'], kwargs['user_email'], kwargs['user_rate']))
+                cursor.execute(sql_requests.INSERT_USER, (kwargs['user_name'], kwargs['user_email'], kwargs['user_rate'],
+                                                          kwargs['time'], kwargs['time']))
                 result = 'user added'
             except psycopg2.IntegrityError as e:
                 result = {'err_code': e.pgcode}
         elif kwargs['req'] == 'add_article':
             cursor.execute(sql_requests.INSERT_ARTICLE,
                           (kwargs['article_name'], kwargs['article_description'], kwargs['article_text'], kwargs['article_rate'],
-                           kwargs['article_lang'], kwargs['author_email'], kwargs['article_tags']))
+                           kwargs['article_lang'], kwargs['author_email'], kwargs['article_tags'], kwargs['time'], kwargs['time']))
             result = True
             print(result)
         elif kwargs['req'] == 'add_lesson':
             cursor.execute(sql_requests.INSERT_LESSON,
                           (kwargs['lesson_name'], kwargs['lesson_description'], kwargs['lesson_text'], kwargs['lesson_rate'],
-                           kwargs['lesson_lang'], kwargs['author_email'], kwargs['lesson_tags']))
+                           kwargs['lesson_lang'], kwargs['author_email'], kwargs['lesson_tags'], kwargs['time'], kwargs['time']))
             result = True
             print(result)
         elif kwargs['req'] == 'add_task':
             cursor.execute(sql_requests.INSERT_TASK,
                           (kwargs['task_name'], kwargs['task_description'], kwargs['task_text'], kwargs['task_rate'],
                            kwargs['author_email'], kwargs['task_difficulty'],
-                           kwargs['task_test_input'], kwargs['task_expected_output'], kwargs['lang_id']))
+                           kwargs['task_test_input'], kwargs['task_expected_output'], kwargs['lang_id'], kwargs['time'], kwargs['time']))
             result = True
             print(result)
         elif kwargs['req'] == 'add_news':
             cursor.execute(sql_requests.INSERT_NEWS,
                            (kwargs['news_name'], kwargs['news_description'], kwargs['news_text'], kwargs['news_rate'],
-                                kwargs['user_email'], kwargs['news_tags'], kwargs['news_importance']))
+                                kwargs['user_email'], kwargs['news_tags'], kwargs['news_importance'], kwargs['time'], kwargs['time']))
             result = True
             print(result)
         elif kwargs['req'] == 'update_article':
             cursor.execute(sql_requests.UPDATE_ARTICLE,
                            (kwargs['article_name'], kwargs['article_description'], kwargs['article_text'], kwargs['article_lang'],
-                            kwargs['article_tags'], kwargs['article_id']))
+                            kwargs['article_tags'], kwargs['last_update'], kwargs['article_id']))
             result = True
         elif kwargs['req'] == 'update_news':
             cursor.execute(sql_requests.UPDATE_NEWS,
                            (kwargs['news_name'], kwargs['news_description'], kwargs['news_text'],
                             kwargs['news_tags'],
-                            kwargs['news_importance'], kwargs['news_id']))
+                            kwargs['news_importance'], kwargs['last_update'], kwargs['news_id']))
             result = True
         elif kwargs['req'] == 'update_lesson':
             cursor.execute(sql_requests.UPDATE_LESSON,
                            (kwargs['lesson_name'], kwargs['lesson_description'], kwargs['lesson_text'],
-                            kwargs['lesson_lang'], kwargs['lesson_tags'], kwargs['lesson_id']))
+                            kwargs['lesson_lang'], kwargs['lesson_tags'], kwargs['last_update'], kwargs['lesson_id']))
             result = True
         elif kwargs['req'] == 'update_task':
             cursor.execute(sql_requests.UPDATE_TASK,
                            (kwargs['task_name'], kwargs['task_description'], kwargs['task_text'],
                             kwargs['lang_name'], kwargs['task_difficulty'], kwargs['task_test_input'],
-                            kwargs['task_expected_output'], kwargs['task_id']))
+                            kwargs['task_expected_output'], kwargs['last_update'], kwargs['task_id']))
             result = True
         elif kwargs['req'] == 'update_decided_user_task':
             cursor.execute(sql_requests.UPDATE_TASK_DECIDED, (kwargs['is_decided'], kwargs['post_id'], kwargs['user_id']))

@@ -3,7 +3,7 @@ import json, datetime
 # from app import sql_requests
 from .sql_handler import handle
 import requests, credentials
-from .processings_functions import format_to_article, check_lesson_ids_on_update_task as chk_ids
+from .processings_functions import format_to_article, check_lesson_ids_on_update_task as chk_ids, identicalChk as ic
 
 # TODO выделить общие части и вынести в отдельный класс
 # TODO сделать хотя бы базовое шифрование и дешифрование передавеммых данных
@@ -226,18 +226,25 @@ async def update_user_article(request):
         article_id = post['articleId']
         article_tags = []
         time = datetime.datetime.today()
-
-        for i in post['articleTags']:
-            article_tags.append(i['name'])
-        result = await handle(req='update_article',
-                              article_name=article_name,
-                              article_description=article_description,
-                              article_text=article_text,
-                              article_lang=article_lang,
-                              article_tags=article_tags,
-                              article_id=article_id,
-                              last_update=time)
-        response_msg['msg'] = result
+        _temp_articles = await handle(req='get_articles_on_id', article_id=article_id)
+        print('temp', _temp_articles)
+        if _temp_articles:
+            if ic(_temp_articles, post, 'article'):
+                print('update identical, pass')
+                response_msg['msg'] = 'identical'
+            else:
+                for i in post['articleTags']:
+                    article_tags.append(i['name'])
+                result = await handle(req='update_article',
+                                      article_name=article_name,
+                                      article_description=article_description,
+                                      article_text=article_text,
+                                      article_lang=article_lang,
+                                      article_tags=article_tags,
+                                      article_id=article_id,
+                                      last_update=time,
+                                      is_moderated=False)
+                response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
     else:
@@ -296,73 +303,81 @@ async def update_user_task(request):
         task_expected_output = post['expectedOutput']
         linked_lessons = post['linkedLessons']
         time = datetime.datetime.today()
-        result = await handle(req='update_task', task_name=task_name,
-                              task_description=task_description,
-                              task_text=task_text,
-                              lang_name=lang_name,
-                              task_difficulty=task_difficulty,
-                              task_id=task_id,
-                              task_test_input=task_test_input,
-                              task_expected_output=task_expected_output,
-                              last_update=time)
-        if result:
-            lessons_ids = await handle(req='get_links_tasks_to_lessons', task_id=task_id)
 
-            print(lessons_ids)
-            print(linked_lessons)
-            if not lessons_ids:
-                print('net linkov')
-                for lesson in linked_lessons:
-                    await handle(req='link_lessons_to_tasks', lesson_id=lesson['lesson_id'], task_name=task_name)
+        _temp_task = await handle(req='get_task_on_id', task_id=task_id)
+        if _temp_task:
+            if ic(_temp_task, post, 'task'):
+                print('update identical, pass')
+                response_msg['msg'] = 'identical'
             else:
-                if linked_lessons:
-                    length_cur_ids = len(lessons_ids)
-                    length_new_ids = len(linked_lessons)
-                    if length_cur_ids == length_new_ids:
-                        for i in range(length_cur_ids):
-                            print(i)
-                            print(f'{lessons_ids[i][0]} {linked_lessons[i]["lesson_id"]}')
-                            if chk_ids(lessons_ids[i][0], linked_lessons[i]['lesson_id']):
-                                print('ravni')
-                            else:
-                                print('neravni')
-                                await handle(req='update_link_task_to_lesson', lesson_id=lessons_ids[i][0], task_id=task_id,
-                                             new_l_id=linked_lessons[i]['lesson_id'])
+                result = await handle(req='update_task', task_name=task_name,
+                                      task_description=task_description,
+                                      task_text=task_text,
+                                      lang_name=lang_name,
+                                      task_difficulty=task_difficulty,
+                                      task_id=task_id,
+                                      task_test_input=task_test_input,
+                                      task_expected_output=task_expected_output,
+                                      last_update=time,
+                                      is_moderated=False)
+                if result:
+                    lessons_ids = await handle(req='get_links_tasks_to_lessons', task_id=task_id)
+
+                    print(lessons_ids)
+                    print(linked_lessons)
+                    if not lessons_ids:
+                        print('net linkov')
+                        for lesson in linked_lessons:
+                            await handle(req='link_lessons_to_tasks', lesson_id=lesson['lesson_id'], task_name=task_name)
                     else:
-                        if length_cur_ids>length_new_ids:
-                            for i in range(length_cur_ids):
-                                try:
+                        if linked_lessons:
+                            length_cur_ids = len(lessons_ids)
+                            length_new_ids = len(linked_lessons)
+                            if length_cur_ids == length_new_ids:
+                                for i in range(length_cur_ids):
+                                    print(i)
                                     print(f'{lessons_ids[i][0]} {linked_lessons[i]["lesson_id"]}')
                                     if chk_ids(lessons_ids[i][0], linked_lessons[i]['lesson_id']):
                                         print('ravni')
                                     else:
                                         print('neravni')
-                                        await handle(req='update_link_task_to_lesson', lesson_id=lessons_ids[i][0],
-                                                     task_id=task_id, new_l_id=linked_lessons[i]['lesson_id'])
-                                except IndexError as e:
-                                    print(e)
-                                    print(f'delete {lessons_ids[i][0]}')
-                                    await handle(req='delete_link_task_to_lesson', lesson_id=lessons_ids[i][0], task_id=task_id)
+                                        await handle(req='update_link_task_to_lesson', lesson_id=lessons_ids[i][0], task_id=task_id,
+                                                     new_l_id=linked_lessons[i]['lesson_id'])
+                            else:
+                                if length_cur_ids>length_new_ids:
+                                    for i in range(length_cur_ids):
+                                        try:
+                                            print(f'{lessons_ids[i][0]} {linked_lessons[i]["lesson_id"]}')
+                                            if chk_ids(lessons_ids[i][0], linked_lessons[i]['lesson_id']):
+                                                print('ravni')
+                                            else:
+                                                print('neravni')
+                                                await handle(req='update_link_task_to_lesson', lesson_id=lessons_ids[i][0],
+                                                             task_id=task_id, new_l_id=linked_lessons[i]['lesson_id'])
+                                        except IndexError as e:
+                                            print(e)
+                                            print(f'delete {lessons_ids[i][0]}')
+                                            await handle(req='delete_link_task_to_lesson', lesson_id=lessons_ids[i][0], task_id=task_id)
+                                else:
+                                    for i in range(length_new_ids):
+                                        try:
+                                            print(f'{lessons_ids[i][0]} {linked_lessons[i]["lesson_id"]}')
+                                            if chk_ids(lessons_ids[i][0], linked_lessons[i]['lesson_id']):
+                                                print('ravni')
+                                            else:
+                                                print('neravni')
+                                                await handle(req='update_link_task_to_lesson', lesson_id=lessons_ids[i][0],
+                                                             task_id=task_id, new_l_id=linked_lessons[i]['lesson_id'])
+                                        except IndexError as e:
+                                            print(e)
+                                            print(f'add {linked_lessons[i]["lesson_id"]}')
+                                            await handle(req='link_lessons_to_tasks', lesson_id=linked_lessons[i]["lesson_id"],
+                                                         task_name=task_name)
                         else:
-                            for i in range(length_new_ids):
-                                try:
-                                    print(f'{lessons_ids[i][0]} {linked_lessons[i]["lesson_id"]}')
-                                    if chk_ids(lessons_ids[i][0], linked_lessons[i]['lesson_id']):
-                                        print('ravni')
-                                    else:
-                                        print('neravni')
-                                        await handle(req='update_link_task_to_lesson', lesson_id=lessons_ids[i][0],
-                                                     task_id=task_id, new_l_id=linked_lessons[i]['lesson_id'])
-                                except IndexError as e:
-                                    print(e)
-                                    print(f'add {linked_lessons[i]["lesson_id"]}')
-                                    await handle(req='link_lessons_to_tasks', lesson_id=linked_lessons[i]["lesson_id"],
-                                                 task_name=task_name)
-                else:
-                    for l_id in lessons_ids:
-                        await handle(req='delete_link_task_to_lesson', lesson_id=l_id[0], task_id=task_id)
-                    print('delete links')
-        response_msg['msg'] = result
+                            for l_id in lessons_ids:
+                                await handle(req='delete_link_task_to_lesson', lesson_id=l_id[0], task_id=task_id)
+                            print('delete links')
+                response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
     else:
@@ -385,17 +400,25 @@ async def update_user_lesson(request):
         lesson_id = post['lessonId']
         lesson_tags = []
         time = datetime.datetime.today()
-        for i in post['lessonTags']:
-            lesson_tags.append(i['name'])
-        print(lesson_tags)
-        result = await handle(req='update_lesson', lesson_name=lesson_name,
-                              lesson_description=lesson_description,
-                              lesson_text=lesson_text,
-                              lesson_lang=lesson_lang,
-                              lesson_tags=lesson_tags,
-                              lesson_id=lesson_id,
-                              last_update=time)
-        response_msg['msg'] = result
+        _temp_lesson = await handle(req='get_lesson_on_id', lesson_id=lesson_id)
+        print('temp', _temp_lesson)
+        if _temp_lesson:
+            if ic(_temp_lesson, post, 'lesson'):
+                print('update identical, pass')
+                response_msg['msg'] = 'identical'
+            else:
+                for i in post['lessonTags']:
+                    lesson_tags.append(i['name'])
+                print(lesson_tags)
+                result = await handle(req='update_lesson', lesson_name=lesson_name,
+                                      lesson_description=lesson_description,
+                                      lesson_text=lesson_text,
+                                      lesson_lang=lesson_lang,
+                                      lesson_tags=lesson_tags,
+                                      lesson_id=lesson_id,
+                                      last_update=time,
+                                      is_moderated=False)
+                response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
     else:
@@ -877,8 +900,6 @@ async def get_news(request):
     headers = {'Access-Control-Allow-Origin': '*'}
     if request.method == 'GET':
         response_msg = {}
-
-        print(request.method)
         result = await handle(req='get_news')
         news = []
 
@@ -895,6 +916,70 @@ async def get_news(request):
         response_msg['news'] = news
         print(response_msg)
         return web.json_response(response_msg, headers=headers)
+
+async def get_unmoderated_posts(request):
+    headers = {'Access-Control-Allow-Origin': '*'}
+    if request.method == 'POST':
+        response_msg = {}
+
+        articles = []
+        lessons = []
+        tasks = []
+
+        # get body req
+        post = await request.json()
+        moder_name = post['moderName']
+        role = post['role']
+        posts_type = post['postsType']
+        print(post)
+        _temp_role = await handle(req='get_user_role', moder_name=moder_name)
+        print(_temp_role)
+        ################################################ get articles ##################################################################################
+        if int(role) == _temp_role[0][0]:
+            if posts_type == 'article':
+                result = await handle(req='get_unmod_articles')
+                if result != 'err':
+                    for i in result:
+                        j_string = {"article_id": i[0], "article_name": i[1], "article_description": i[2],
+                                    "article_text": i[3],"article_tags": i[4], "author_id": i[5],"author": i[6]}
+                        articles.append(j_string)
+                else:
+                    response_msg['err'] = result
+                response_msg['articles'] = articles
+        ################################################ get lessons ##################################################################################
+            elif posts_type=='lesson':
+                result = await handle(req='get_unmod_lessons')
+                if result != 'err':
+                    for i in result:
+                        j_string = {"lesson_id": i[0], "lesson_name": i[1], "lesson_description": i[2], "lesson_text": i[3],
+                                "lesson_tags": i[4], "author_id": i[5],"author": i[6]}
+                        lessons.append(j_string)
+                else:
+                    response_msg['err'] = result
+                response_msg['lessons'] = lessons
+        ############################################## get tasks ######################################################################################
+            elif posts_type=='task':
+                result = await handle(req='get_unmod_tasks')
+                if result != 'err':
+                    for i in result:
+                        lessons_ids = await handle(req='get_links_tasks_to_lessons', task_id=i[0])
+                        links_lessons = []
+                        for l_id in lessons_ids:
+                            l_name = await handle(req='get_lesson_name', lesson_id=l_id[0])
+                            _temp = {'lesson_id': l_id[0], 'lesson_name': l_name[0][0]}
+                            links_lessons.append(_temp)
+                        j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2], "task_text": i[3],
+                                "task_difficulty": i[4], "test_input": i[5], "expected_output": i[6],
+                                "author_id": i[7],"author": i[8], "lessons": links_lessons}
+                        # print(j_string)
+                        tasks.append(j_string)
+                else:
+                    response_msg['err'] = result
+                response_msg['tasks'] = tasks
+
+        response = {'posts': response_msg}
+
+        return web.json_response(response, headers=headers)
 
 # async def get_lesson_tasks(request):
 #     headers = {'Access-Control-Allow-Origin': '*',}
@@ -1268,4 +1353,23 @@ async def update_vote_post(request):
                     pass
             else:
                 pass
+        return web.json_response(response_msg, headers=headers)
+
+async def update_is_moderated(request):
+    headers = {'Access-Control-Allow-Origin': '*'}
+    if request.method == 'POST':
+        response_msg = {}
+        # get body req
+        post = await request.json()
+        user_id = post['authorId']
+        post_id = post['postId']
+        moder = post['moder']
+        post_type = post['postType']
+        print(post)
+        upd = await handle(req='update_ismoderated', post_type=post_type, user_id=user_id, post_id=post_id, moder=moder)
+        if upd:
+            response_msg['msg']=upd
+        else:
+            response_msg['err']=upd
+
         return web.json_response(response_msg, headers=headers)

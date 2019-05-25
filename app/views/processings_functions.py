@@ -2,9 +2,6 @@
 
 async def format_to_article(text):
     code_templates = {}
-    # print(text)
-    # text = text.replace(' \n', '\n')
-    # text = text.replace('\n', '<br>')
     while text.find('<code') > 0:
         start = text.find('<code')
         end = text.find('</code>')+7
@@ -59,21 +56,52 @@ async def format_to_article(text):
     # print(formatted)
     return formatted
 
-
-# format_to_article(
-#             "Такс, ща глянем че получится во первых <code class=python>print('пляшем')</code> fhfhfhfhfhfh"
-#            "\nТеперь вот так<code class=python>print('продолжаем плясать')</code>       "
-#            "\n<code class=python>print('надо тестануть че получится')</code>         Пробелов много не бывает          "
-#            "\n<code class=python>print('пляшем')</code>повторимсячтобыпроверить"
-#            "\nahhhhhhhhhhhahahhahahahahaha"
-#            "\n<code class=python>print('тестик')</code>")
-
-# i = input()
-# print(i)
-
 def check_lesson_ids_on_update_task(lesson_id, lesson_linked_id):
     # last_cur_id = lesson_id
     # last_new_id = lesson_linked_id
     # print(f'{lesson_id}       {lesson_linked_id}')
     if lesson_id == lesson_linked_id:
         return True
+
+def identicalChk(cur_post, upd_post, post_type):
+    identical = False
+    print('temp', cur_post)
+    print('upd', upd_post)
+    if post_type=='article':
+        _temp_tags = []
+        for i in upd_post['articleTags']:
+            _temp_tags.append(i['name'])
+        if cur_post[0][0] == upd_post['articleName'] and \
+                        cur_post[0][1] == upd_post['articleDescription'] and \
+                        cur_post[0][2] == upd_post['articleText'] and \
+                        cur_post[0][3] == _temp_tags and \
+                        cur_post[0][4] == upd_post['lang']:
+            identical = True
+    elif post_type=='lesson':
+        _temp_tags = []
+        for i in upd_post['lessonTags']:
+            _temp_tags.append(i['name'])
+        if cur_post[0][0] == upd_post['lessonName'] and \
+                        cur_post[0][1] == upd_post['lessonDescription'] and \
+                        cur_post[0][2] == upd_post['lessonText'] and \
+                        cur_post[0][3] == _temp_tags and \
+                        cur_post[0][4] == upd_post['lang']:
+            identical = True
+    elif post_type=='task':
+        # print(f'{cur_post[0][0]} {upd_post["taskName"]} {cur_post[0][0]== upd_post["taskName"]}\n'
+        #       f'{cur_post[0][1]} {upd_post["taskDescription"]} {cur_post[0][1]== upd_post["taskDescription"]}\n'
+        #       f'{cur_post[0][2]} {upd_post["taskText"]} {cur_post[0][2]== upd_post["taskText"]}\n'
+        #       f'{cur_post[0][3]} {upd_post["difficulty"]} {cur_post[0][3]== int(upd_post["difficulty"])}\n'
+        #       f'{cur_post[0][4]} {upd_post["testInput"]} {cur_post[0][4]== upd_post["testInput"]}\n'
+        #       f'{cur_post[0][5]} {upd_post["expectedOutput"]} {cur_post[0][5]== upd_post["expectedOutput"]}\n'
+        #       f'{cur_post[0][6]} {upd_post["lang_name"]} {cur_post[0][6]== upd_post["lang_name"]}\n')
+        if cur_post[0][0] == upd_post['taskName'] and \
+                        cur_post[0][1] == upd_post['taskDescription'] and \
+                        cur_post[0][2] == upd_post['taskText'] and \
+                        cur_post[0][3] == int(upd_post['difficulty']) and \
+                        cur_post[0][4] == upd_post['testInput'] and \
+                        cur_post[0][5] == upd_post['expectedOutput'] and \
+                        cur_post[0][6] == upd_post['lang_name']:
+            identical = True
+
+    return identical

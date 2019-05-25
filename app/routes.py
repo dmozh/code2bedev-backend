@@ -15,6 +15,7 @@ def setup_routes(app):
     app.router.add_route('POST', f'{crs.API}updateUserTask', response.update_user_task)
     app.router.add_route('POST', f'{crs.API}updateUserLesson', response.update_user_lesson)
     app.router.add_route('POST', f'{crs.API}updatePostRate', response.update_vote_post)
+    app.router.add_route('POST', f'{crs.API}updateIsModerated', response.update_is_moderated)
 
     app.router.add_route('POST', f'{crs.API}addSeenPost', response.insert_seen_post)
 
@@ -35,7 +36,7 @@ def setup_routes(app):
     app.router.add_route('POST', f'{crs.API}getArticles', response.get_articles)
     app.router.add_route('POST', f'{crs.API}getLessons', response.get_lessons)
     app.router.add_route('POST', f'{crs.API}getTasks', response.get_tasks)
-    # app.router.add_route('POST', f'{crs.API}getLessonTasks', response.get_lesson_tasks)
+    app.router.add_route('POST', f'{crs.API}getUnModeratedPosts', response.get_unmoderated_posts)
     app.router.add_route('GET',  f'{crs.API}getNews', response.get_news)
 
     app.router.add_route('POST', f'{crs.API}getPostInfo', response.get_post_info)

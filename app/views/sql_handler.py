@@ -32,6 +32,15 @@ async def handle(**kwargs):
                     result = {'valid': True}
             else:
                 result = {'valid': True}
+        elif kwargs['req'] == 'get_articles_on_id':
+            cursor.execute(sql_requests.SELECT_ARTICLE_ON_ID, [kwargs['article_id']])
+            result = cursor.fetchall()
+        elif kwargs['req'] == 'get_lesson_on_id':
+            cursor.execute(sql_requests.SELECT_LESSON_ON_ID, [kwargs['lesson_id']])
+            result = cursor.fetchall()
+        elif kwargs['req'] == 'get_task_on_id':
+            cursor.execute(sql_requests.SELECT_TASK_ON_ID, [kwargs['task_id']])
+            result = cursor.fetchall()
         elif kwargs['req'] == 'get_seen_tasks':
             cursor.execute(sql_requests.SELECT_USER_SEEN_TASKS, [kwargs['user_id']])
             result = cursor.fetchall()
@@ -134,6 +143,18 @@ async def handle(**kwargs):
             elif kwargs['post_type'] == 'task':
                 cursor.execute(sql_requests.SELECT_USER_TO_TASK_VOTES, [kwargs['user_id'], kwargs['post_id']])
                 result = cursor.fetchall()
+        elif kwargs['req'] == 'get_user_role':
+            cursor.execute(sql_requests.SELECT_USER_ROLE, [kwargs['moder_name']])
+            result = cursor.fetchall()
+        elif kwargs['req'] == 'get_unmod_articles':
+            cursor.execute(sql_requests.SELECT_UNMOD_ARTICLES)
+            result = cursor.fetchall()
+        elif kwargs['req'] == 'get_unmod_lessons':
+            cursor.execute(sql_requests.SELECT_UNMOD_LESSONS)
+            result = cursor.fetchall()
+        elif kwargs['req'] == 'get_unmod_tasks':
+            cursor.execute(sql_requests.SELECT_UNMOD_TASKS)
+            result = cursor.fetchall()
         # TODO в add запросах result должен возвращать состояние запроса успешно, исключение или ошибка, если ошибка/исключение, то её описание,
         elif kwargs['req'] == 'add_user':
             try:
@@ -170,7 +191,7 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'update_article':
             cursor.execute(sql_requests.UPDATE_ARTICLE,
                            (kwargs['article_name'], kwargs['article_description'], kwargs['article_text'], kwargs['article_lang'],
-                            kwargs['article_tags'], kwargs['last_update'], kwargs['article_id']))
+                            kwargs['article_tags'], kwargs['last_update'], kwargs['is_moderated'], kwargs['article_id']))
             result = True
         elif kwargs['req'] == 'update_news':
             cursor.execute(sql_requests.UPDATE_NEWS,
@@ -181,13 +202,14 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'update_lesson':
             cursor.execute(sql_requests.UPDATE_LESSON,
                            (kwargs['lesson_name'], kwargs['lesson_description'], kwargs['lesson_text'],
-                            kwargs['lesson_lang'], kwargs['lesson_tags'], kwargs['last_update'], kwargs['lesson_id']))
+                            kwargs['lesson_lang'], kwargs['lesson_tags'], kwargs['last_update'], kwargs['is_moderated'],
+                            kwargs['lesson_id']))
             result = True
         elif kwargs['req'] == 'update_task':
             cursor.execute(sql_requests.UPDATE_TASK,
                            (kwargs['task_name'], kwargs['task_description'], kwargs['task_text'],
                             kwargs['lang_name'], kwargs['task_difficulty'], kwargs['task_test_input'],
-                            kwargs['task_expected_output'], kwargs['last_update'], kwargs['task_id']))
+                            kwargs['task_expected_output'], kwargs['last_update'], kwargs['is_moderated'], kwargs['task_id']))
             result = True
         elif kwargs['req'] == 'update_decided_user_task':
             cursor.execute(sql_requests.UPDATE_TASK_DECIDED, (kwargs['is_decided'], kwargs['post_id'], kwargs['user_id']))
@@ -251,6 +273,20 @@ async def handle(**kwargs):
             result = True
         elif kwargs['req'] == 'update_link_task_to_lesson':
             cursor.execute(sql_requests.UPDATE_LINK_TASK_TO_LESSON, (kwargs['new_l_id'], kwargs['task_id'], kwargs['task_id'], kwargs['lesson_id']))
+            result = True
+        elif kwargs['req'] == 'update_ismoderated':
+            if kwargs['post_type'] == 'article':
+                cursor.execute(sql_requests.UPDATE_ISMODER_ARTICLE,
+                               (kwargs['moder'], kwargs['post_id'], kwargs['user_id']))
+                result = True
+            elif kwargs['post_type'] == 'task':
+                cursor.execute(sql_requests.UPDATE_ISMODER_TASK,
+                               (kwargs['moder'], kwargs['post_id'], kwargs['user_id']))
+                result = True
+            elif kwargs['post_type'] == 'lesson':
+                cursor.execute(sql_requests.UPDATE_ISMODER_LESSON,
+                               (kwargs['moder'], kwargs['post_id'], kwargs['user_id']))
+                result = True
         elif kwargs['req'] == 'insert_seen_lessons':
             cursor.execute(sql_requests.INSERT_SEEN_LESSON,
                            (kwargs['user_id'], kwargs['post_id'], kwargs['is_seen']))

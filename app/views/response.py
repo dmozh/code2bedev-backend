@@ -3,6 +3,7 @@ import json, datetime
 # from app import sql_requests
 from .sql_handler import handle
 import requests, credentials
+import base64
 from .processings_functions import format_to_article, check_lesson_ids_on_update_task as chk_ids, identicalChk as ic
 
 # TODO выделить общие части и вынести в отдельный класс
@@ -15,7 +16,6 @@ async def test(request):
     # response = "<div><p><b>kokoko</b></p></div>"
     response = f'<div>{time}</div>'
     return web.Response(body=response, headers=headers)
-
 
 async def add_article(request):
     headers = {'Access-Control-Allow-Origin': '*'}
@@ -529,6 +529,7 @@ async def get_user(request):
         print(request.method)
         print(post)
         result = await handle(req='get_user', user_email=user_email)
+        print(result)
         user_id = result[0][0]
         seen_tasks_result       = await handle(req='get_seen_tasks',    user_id=user_id)
         seen_lessons_result     = await handle(req='get_seen_lessons',  user_id=user_id)
@@ -1379,3 +1380,28 @@ async def update_is_moderated(request):
             response_msg['err']=upd
 
         return web.json_response(response_msg, headers=headers)
+
+async def getfb(request):
+    headers = {'Access-Control-Allow-Origin': '*'}
+    if request.method == 'POST':
+        post = await request.json()
+        resp = None
+        if post['type']=='dev':
+            fb_creds_dev = {
+                'apiKey': 'AIzaSyBikSr7T1CseO8oLZpCDIGSnkR05u7aax4',
+                'authDomain': 'test-auth-vuejs.firebaseapp.com',
+                'databaseURL': 'https://test-auth-vuejs.firebaseio.com',
+                'projectId': 'test-auth-vuejs',
+                'storageBucket': 'test-auth-vuejs.appspot.com',
+                'messagingSenderId': '652844837907'}
+            resp = fb_creds_dev
+        else:
+            fb_creds_dep = {'apiKey': 'AIzaSyBOYOK6b8obzZYD9I5TZSz-bC-6PjPpSn0',
+                        'authDomain': 'code2bedev.firebaseapp.com',
+                        'databaseURL': 'https://code2bedev.firebaseio.com',
+                        'projectId': 'code2bedev',
+                        'storageBucket': 'code2bedev.appspot.com',
+                        'messagingSenderId': '598713114594'}
+            resp = fb_creds_dep
+
+        return web.json_response(resp, headers=headers)

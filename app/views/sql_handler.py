@@ -23,11 +23,11 @@ async def handle(**kwargs):
             print(temp)
             if temp:
                 if temp[0][0] == kwargs['user_email'] and temp[0][1] == kwargs['user_name']:
-                    result = {'valid': False, 'msg': 'this email and name already exist'}
+                    result = {'valid': False, 'msg': 'Данные имя и email уже используются'}
                 elif temp[0][0] == kwargs['user_email']:
-                    result = {'valid': False, 'msg': 'this email already exist'}
+                    result = {'valid': False, 'msg': 'Данный email уже используется'}
                 elif temp[0][1] == kwargs['user_name']:
-                    result = {'valid': False, 'msg': 'this name already exist'}
+                    result = {'valid': False, 'msg': 'Данное имя уже используется'}
                 else:
                     result = {'valid': True}
             else:

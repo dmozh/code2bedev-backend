@@ -3,6 +3,7 @@ import credentials as crs
 
 def setup_routes(app):
     app.router.add_route('GET', f'{crs.API}test', response.test)
+    app.router.add_route('POST', f'{crs.API}getfb', response.getfb)
 
     app.router.add_route('POST', f'{crs.API}addUser', response.add_user)
     app.router.add_route('POST', f'{crs.API}addArticle', response.add_article)

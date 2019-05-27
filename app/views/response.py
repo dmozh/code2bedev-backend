@@ -291,8 +291,7 @@ async def update_user_task(request):
 
         # get body req
         post = await request.json()
-        print(post)
-
+        # print(post)
         lang_name = post['lang_name']
         task_id = post['taskId']
         task_name = post['taskName']
@@ -305,8 +304,14 @@ async def update_user_task(request):
         time = datetime.datetime.today()
 
         _temp_task = await handle(req='get_task_on_id', task_id=task_id)
+        lessons_ids = await handle(req='get_links_tasks_to_lessons', task_id=task_id)
+        _computed_task = []
+        for i in _temp_task[0]:
+            _computed_task.append(i)
+        print(len(lessons_ids))
+        _computed_task.append(lessons_ids)
         if _temp_task:
-            if ic(_temp_task, post, 'task'):
+            if ic(_computed_task, post, 'task'):
                 print('update identical, pass')
                 response_msg['msg'] = 'identical'
             else:
@@ -809,14 +814,14 @@ async def get_articles(request):
                     # text = await format_to_article(i[3])
                     j_string = {"article_id": i[0], "article_name": i[1], "article_description": i[2], #"article_text": text,
                                 "article_rate": i[3], "article_tags": i[4], "author": i[5], "lang": i[6],
-                                "added_time": i[7].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M:%S')}
+                                "added_time": i[7].strftime('%d.%m.%Y  %H:%M'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M'), "views": i[9]}
                     articles.append(j_string)
             else:
                 for i in result:
                     # text = await format_to_article(i[3])
                     j_string = {"article_id": i[0], "article_name": i[1], "article_description": i[2], #"article_text": text,
                                 "article_rate": i[3], "article_tags": i[4], "author": i[5],
-                                "added_time": i[6].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[7].strftime('%d.%m.%Y  %H:%M:%S')}
+                                "added_time": i[6].strftime('%d.%m.%Y  %H:%M'), "last_update": i[7].strftime('%d.%m.%Y  %H:%M'), "views": i[8]}
                     articles.append(j_string)
         else:
             response_msg['err'] = result
@@ -846,14 +851,14 @@ async def get_lessons(request):
                     j_string = {"lesson_id": i[0], "lesson_name": i[1], "lesson_description": i[2],
                                 # "lesson_text": i[3],
                                 "lesson_rate": i[3], "lesson_tags": i[4], "author": i[5], "lang": i[6],
-                                "added_time": i[7].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M:%S')}
+                                "added_time": i[7].strftime('%d.%m.%Y  %H:%M'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M'), "views": i[9]}
                     lessons.append(j_string)
             else:
                 for i in result:
                     j_string = {"lesson_id": i[0], "lesson_name": i[1], "lesson_description": i[2],
                                 # "lesson_text": i[3],
                                 "lesson_rate": i[3], "lesson_tags": i[4], "author": i[5],
-                                "added_time": i[6].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[7].strftime('%d.%m.%Y  %H:%M:%S')}
+                                "added_time": i[6].strftime('%d.%m.%Y  %H:%M'), "last_update": i[7].strftime('%d.%m.%Y  %H:%M'), "views": i[8]}
                     lessons.append(j_string)
         else:
             response_msg['err'] = result
@@ -881,13 +886,13 @@ async def get_tasks(request):
                 for i in result:
                     j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2],
                                 "task_rate": i[3], "author": i[4], "task_difficulty": i[5], "lang": i[6],
-                                "added_time": i[7].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M:%S')}
+                                "added_time": i[7].strftime('%d.%m.%Y  %H:%M'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M'), "views": i[9]}
                     tasks.append(j_string)
             else:
                 for i in result:
                     j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2],
                                 "task_rate": i[3], "author": i[4], "task_difficulty": i[5],
-                                "added_time": i[6].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[7].strftime('%d.%m.%Y  %H:%M:%S')}
+                                "added_time": i[6].strftime('%d.%m.%Y  %H:%M'), "last_update": i[7].strftime('%d.%m.%Y  %H:%M'), "views": i[8]}
                     tasks.append(j_string)
         else:
             response_msg['err'] = result
@@ -908,7 +913,8 @@ async def get_news(request):
                 j_string = {"news_id": i[0], "news_name": i[1], "news_description": i[2],
                             # "news_text": i[3],
                             "news_rate": i[3], "news_tags": i[4], "news_importance": i[5] ,"author": i[6],
-                            "added_time": i[7].strftime('%d.%m.%Y  %H:%M:%S'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M:%S')}
+                            "added_time": i[7].strftime('%d.%m.%Y  %H:%M'), "last_update": i[8].strftime('%d.%m.%Y  %H:%M'),
+                            "views": i[9]}
                 news.append(j_string)
         else:
             response_msg['err'] = result

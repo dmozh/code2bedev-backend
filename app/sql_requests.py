@@ -76,7 +76,7 @@ SELECT_TASK_ON_ID =  "select tasks.task_name, tasks.task_description, tasks.task
 
 SELECT_ALL_ARTICLES = """select articles.article_id, articles.article_name, articles.article_description, 
                       articles.article_rate, articles.article_tags, users.user_name, programming_langs.lang_name, 
-                      articles.added_time, articles.last_update 
+                      articles.added_time, articles.last_update, articles.article_views 
                       from articles 
                       left outer join users on (articles.author_id = users.user_id) 
                       left outer join programming_langs on (articles.lang_id = programming_langs.lang_id) 
@@ -84,13 +84,13 @@ SELECT_ALL_ARTICLES = """select articles.article_id, articles.article_name, arti
 
 SELECT_ALL_NEWS = "select news.news_id, news.news_name, news.news_description, " \
                   "news.news_rate, news.news_tags, news.news_importance, users.user_name," \
-                  "news.added_time, news.last_update " \
+                  "news.added_time, news.last_update, news.news_views " \
                   "from news " \
                   "left outer join users on (news.author_id = users.user_id) "
 
 SELECT_ALL_TASKS = """select tasks.task_id, tasks.task_name, tasks.task_description, tasks.task_rate, 
                    users.user_name, tasks.task_difficulty, 
-                   programming_langs.lang_name, tasks.added_time, tasks.last_update  
+                   programming_langs.lang_name, tasks.added_time, tasks.last_update, tasks.task_views  
                    from tasks  
                    left outer join users on (users.user_id = tasks.author_id) 
                    left outer join programming_langs on (programming_langs.lang_id = tasks.lang_id)
@@ -98,7 +98,7 @@ SELECT_ALL_TASKS = """select tasks.task_id, tasks.task_name, tasks.task_descript
 
 SELECT_ALL_LESSONS = """select lessons.lesson_id, lessons.lesson_name, lessons.lesson_description, 
                       lessons.lesson_rate, lessons.lesson_tags, users.user_name, programming_langs.lang_name, 
-                      lessons.added_time, lessons.last_update 
+                      lessons.added_time, lessons.last_update, lessons.lesson_views 
                       from lessons 
                       left outer join users on (lessons.author_id = users.user_id) 
                       left outer join programming_langs on (lessons.lang_id = programming_langs.lang_id) 
@@ -106,7 +106,7 @@ SELECT_ALL_LESSONS = """select lessons.lesson_id, lessons.lesson_name, lessons.l
 
 SELECT_LANG_ARTICLES = """select articles.article_id, articles.article_name, articles.article_description, 
                        articles.article_rate, articles.article_tags, users.user_name, articles.added_time, 
-                       articles.last_update 
+                       articles.last_update, articles.article_views  
                        from articles 
                        left outer join users on (articles.author_id = users.user_id) 
                        left outer join programming_langs on (articles.lang_id = programming_langs.lang_id) 
@@ -114,7 +114,7 @@ SELECT_LANG_ARTICLES = """select articles.article_id, articles.article_name, art
 
 SELECT_LANG_LESSONS = """select lessons.lesson_id, lessons.lesson_name, lessons.lesson_description, 
                       lessons.lesson_rate, lessons.lesson_tags, users.user_name,
-                      lessons.added_time, lessons.last_update 
+                      lessons.added_time, lessons.last_update, lessons.lesson_views 
                       from lessons 
                       left outer join users on (lessons.author_id = users.user_id) 
                       left outer join programming_langs on (lessons.lang_id = programming_langs.lang_id) 
@@ -122,7 +122,7 @@ SELECT_LANG_LESSONS = """select lessons.lesson_id, lessons.lesson_name, lessons.
 
 SELECT_LANG_TASKS = """select tasks.task_id, tasks.task_name, tasks.task_description, tasks.task_rate, 
                     users.user_name, tasks.task_difficulty, 
-                    tasks.added_time, tasks.last_update 
+                    tasks.added_time, tasks.last_update, tasks.task_views 
                     from tasks  
                     left outer join users on (users.user_id = tasks.author_id)
                     left outer join programming_langs on (programming_langs.lang_id = tasks.lang_id)

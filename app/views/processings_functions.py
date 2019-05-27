@@ -88,20 +88,29 @@ def identicalChk(cur_post, upd_post, post_type):
                         cur_post[0][4] == upd_post['lang']:
             identical = True
     elif post_type=='task':
-        # print(f'{cur_post[0][0]} {upd_post["taskName"]} {cur_post[0][0]== upd_post["taskName"]}\n'
-        #       f'{cur_post[0][1]} {upd_post["taskDescription"]} {cur_post[0][1]== upd_post["taskDescription"]}\n'
-        #       f'{cur_post[0][2]} {upd_post["taskText"]} {cur_post[0][2]== upd_post["taskText"]}\n'
-        #       f'{cur_post[0][3]} {upd_post["difficulty"]} {cur_post[0][3]== int(upd_post["difficulty"])}\n'
-        #       f'{cur_post[0][4]} {upd_post["testInput"]} {cur_post[0][4]== upd_post["testInput"]}\n'
-        #       f'{cur_post[0][5]} {upd_post["expectedOutput"]} {cur_post[0][5]== upd_post["expectedOutput"]}\n'
-        #       f'{cur_post[0][6]} {upd_post["lang_name"]} {cur_post[0][6]== upd_post["lang_name"]}\n')
-        if cur_post[0][0] == upd_post['taskName'] and \
-                        cur_post[0][1] == upd_post['taskDescription'] and \
-                        cur_post[0][2] == upd_post['taskText'] and \
-                        cur_post[0][3] == int(upd_post['difficulty']) and \
-                        cur_post[0][4] == upd_post['testInput'] and \
-                        cur_post[0][5] == upd_post['expectedOutput'] and \
-                        cur_post[0][6] == upd_post['lang_name']:
-            identical = True
+        # print(f'{cur_post[0]} {upd_post["taskName"]} {cur_post[0]== upd_post["taskName"]}\n'
+        #       f'{cur_post[1]} {upd_post["taskDescription"]} {cur_post[1]== upd_post["taskDescription"]}\n'
+        #       f'{cur_post[2]} {upd_post["taskText"]} {cur_post[2]== upd_post["taskText"]}\n'
+        #       f'{cur_post[3]} {upd_post["difficulty"]} {cur_post[3]== int(upd_post["difficulty"])}\n'
+        #       f'{cur_post[4]} {upd_post["testInput"]} {cur_post[4]== upd_post["testInput"]}\n'
+        #       f'{cur_post[5]} {upd_post["expectedOutput"]} {cur_post[5]== upd_post["expectedOutput"]}\n'
+        #       f'{cur_post[6]} {upd_post["lang_name"]} {cur_post[6]== upd_post["lang_name"]}\n')
+        if cur_post[0] == upd_post['taskName'] and \
+                        cur_post[1] == upd_post['taskDescription'] and \
+                        cur_post[2] == upd_post['taskText'] and \
+                        cur_post[3] == int(upd_post['difficulty']) and \
+                        cur_post[4] == upd_post['testInput'] and \
+                        cur_post[5] == upd_post['expectedOutput'] and \
+                        cur_post[6] == upd_post['lang_name']:
+            if len(cur_post[7]) == len(upd_post['linkedLessons']):
+                idx = 0
+                for i in cur_post[7]:
+                    if check_lesson_ids_on_update_task(i[0], upd_post['linkedLessons'][idx]['lesson_id']):
+                        identical = True
+                    else:
+                        identical = False
+                    idx += 1
+            else:
+                identical = False
 
     return identical

@@ -80,7 +80,7 @@ SELECT_ALL_ARTICLES = """select articles.article_id, articles.article_name, arti
                       from articles 
                       left outer join users on (articles.author_id = users.user_id) 
                       left outer join programming_langs on (articles.lang_id = programming_langs.lang_id) 
-                      where articles."isModerated"=TRUE"""
+                      where articles."isApproved"=TRUE"""
 
 SELECT_ALL_NEWS = "select news.news_id, news.news_name, news.news_description, " \
                   "news.news_rate, news.news_tags, news.news_importance, users.user_name," \
@@ -94,7 +94,7 @@ SELECT_ALL_TASKS = """select tasks.task_id, tasks.task_name, tasks.task_descript
                    from tasks  
                    left outer join users on (users.user_id = tasks.author_id) 
                    left outer join programming_langs on (programming_langs.lang_id = tasks.lang_id)
-                   where tasks."isModerated"=TRUE """
+                   where tasks."isApproved"=TRUE """
 
 SELECT_ALL_LESSONS = """select lessons.lesson_id, lessons.lesson_name, lessons.lesson_description, 
                       lessons.lesson_rate, lessons.lesson_tags, users.user_name, programming_langs.lang_name, 
@@ -102,7 +102,7 @@ SELECT_ALL_LESSONS = """select lessons.lesson_id, lessons.lesson_name, lessons.l
                       from lessons 
                       left outer join users on (lessons.author_id = users.user_id) 
                       left outer join programming_langs on (lessons.lang_id = programming_langs.lang_id) 
-                      where lessons."isModerated"=TRUE"""
+                      where lessons."isApproved"=TRUE"""
 
 SELECT_LANG_ARTICLES = """select articles.article_id, articles.article_name, articles.article_description, 
                        articles.article_rate, articles.article_tags, users.user_name, articles.added_time, 
@@ -110,7 +110,7 @@ SELECT_LANG_ARTICLES = """select articles.article_id, articles.article_name, art
                        from articles 
                        left outer join users on (articles.author_id = users.user_id) 
                        left outer join programming_langs on (articles.lang_id = programming_langs.lang_id) 
-                       where programming_langs.lang_name = %s and articles."isModerated"=TRUE"""
+                       where programming_langs.lang_name = %s and articles."isApproved"=TRUE"""
 
 SELECT_LANG_LESSONS = """select lessons.lesson_id, lessons.lesson_name, lessons.lesson_description, 
                       lessons.lesson_rate, lessons.lesson_tags, users.user_name,
@@ -118,7 +118,7 @@ SELECT_LANG_LESSONS = """select lessons.lesson_id, lessons.lesson_name, lessons.
                       from lessons 
                       left outer join users on (lessons.author_id = users.user_id) 
                       left outer join programming_langs on (lessons.lang_id = programming_langs.lang_id) 
-                      where programming_langs.lang_name = %s and lessons."isModerated"=TRUE"""
+                      where programming_langs.lang_name = %s and lessons."isApproved"=TRUE"""
 
 SELECT_LANG_TASKS = """select tasks.task_id, tasks.task_name, tasks.task_description, tasks.task_rate, 
                     users.user_name, tasks.task_difficulty, 
@@ -126,21 +126,21 @@ SELECT_LANG_TASKS = """select tasks.task_id, tasks.task_name, tasks.task_descrip
                     from tasks  
                     left outer join users on (users.user_id = tasks.author_id)
                     left outer join programming_langs on (programming_langs.lang_id = tasks.lang_id)
-                    where programming_langs.lang_name = %s and tasks."isModerated"=TRUE """
+                    where programming_langs.lang_name = %s and tasks."isApproved"=TRUE """
 
 SELECT_LESSON_TASKS = "select task_id from tasks_to_lessons " \
                       "where lesson_id = %s;"
 
-SELECT_SHORT_TASK_INFO = "select task_id, task_name, task_difficulty " \
-                         "from tasks " \
-                         "where task_id=%s;"
+SELECT_SHORT_TASK_INFO = """select task_id, task_name, task_difficulty 
+                            from tasks 
+                            where task_id=%s and "isApproved"=True;"""
 
 SELECT_TASK_LESSONS = "select lesson_id from tasks_to_lessons " \
                       "where task_id = %s;"
 
-SELECT_SHORT_LESSON_INFO = "select lesson_id, lesson_name " \
-                         "from lessons " \
-                         "where lesson_id=%s;"
+SELECT_SHORT_LESSON_INFO = """select lesson_id, lesson_name 
+                              from lessons  
+                              where lesson_id=%s and "isApproved"=True;"""
 
 SELECT_LINK_TASKS_TO_LESSONS = "select lesson_id from tasks_to_lessons where task_id = %s"
 
@@ -278,6 +278,8 @@ UPDATE_ARTICLE = """UPDATE articles SET
                  lang_id = (SELECT lang_id from programming_langs WHERE lang_name = %s), 
                  article_tags = %s,
                  last_update = %s,
+                 "isDenied"=%s,
+                 "isApproved"=%s,
                  "isModerated" = %s
                  WHERE article_id = %s"""
 
@@ -297,6 +299,8 @@ UPDATE_LESSON = """UPDATE lessons SET
                  lang_id = (SELECT lang_id from programming_langs WHERE lang_name = %s),
                  lesson_tags = %s,
                  last_update = %s,
+                 "isDenied"=%s,
+                 "isApproved"=%s,
                  "isModerated" = %s
                  WHERE lesson_id = %s"""
 
@@ -309,14 +313,22 @@ UPDATE_TASK =    """UPDATE tasks SET
                  test_input = %s, 
                  expected_output = %s,
                  last_update = %s,
+                 "isDenied"=%s,
+                 "isApproved"=%s,
                  "isModerated" = %s
                  WHERE task_id = %s"""
 
-UPDATE_ISMODER_ARTICLE = """UPDATE articles set "isModerated"=%s where article_id=%s and author_id=%s"""
+UPDATE_ISMODER_ARTICLE = """UPDATE articles 
+                            set "isModerated"=%s, "isDenied"=%s, "isApproved"=%s
+                            where article_id=%s and author_id=%s"""
 
-UPDATE_ISMODER_LESSON = """UPDATE lessons set "isModerated"=%s where lesson_id=%s and author_id=%s"""
+UPDATE_ISMODER_LESSON = """UPDATE lessons 
+                          set "isModerated"=%s, "isDenied"=%s, "isApproved"=%s
+                          where lesson_id=%s and author_id=%s"""
 
-UPDATE_ISMODER_TASK = """UPDATE tasks set "isModerated"=%s where task_id=%s and author_id=%s"""
+UPDATE_ISMODER_TASK = """UPDATE tasks 
+                          set "isModerated"=%s, "isDenied"=%s, "isApproved"=%s
+                          where task_id=%s and author_id=%s"""
 
 UPDATE_TASK_DECIDED = """UPDATE users_to_tasks SET "isDecided"=%s WHERE task_id=%s AND user_id=%s"""
 

@@ -191,7 +191,8 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'update_article':
             cursor.execute(sql_requests.UPDATE_ARTICLE,
                            (kwargs['article_name'], kwargs['article_description'], kwargs['article_text'], kwargs['article_lang'],
-                            kwargs['article_tags'], kwargs['last_update'], kwargs['is_moderated'], kwargs['article_id']))
+                            kwargs['article_tags'], kwargs['last_update'], kwargs['is_moderated'],kwargs['is_denied'],kwargs['is_approved'],
+                            kwargs['article_id']))
             result = True
         elif kwargs['req'] == 'update_news':
             cursor.execute(sql_requests.UPDATE_NEWS,
@@ -202,14 +203,16 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'update_lesson':
             cursor.execute(sql_requests.UPDATE_LESSON,
                            (kwargs['lesson_name'], kwargs['lesson_description'], kwargs['lesson_text'],
-                            kwargs['lesson_lang'], kwargs['lesson_tags'], kwargs['last_update'], kwargs['is_moderated'],
+                            kwargs['lesson_lang'], kwargs['lesson_tags'], kwargs['last_update'],
+                            kwargs['is_denied'], kwargs['is_approved'], kwargs['is_moderated'],
                             kwargs['lesson_id']))
             result = True
         elif kwargs['req'] == 'update_task':
             cursor.execute(sql_requests.UPDATE_TASK,
                            (kwargs['task_name'], kwargs['task_description'], kwargs['task_text'],
                             kwargs['lang_name'], kwargs['task_difficulty'], kwargs['task_test_input'],
-                            kwargs['task_expected_output'], kwargs['last_update'], kwargs['is_moderated'], kwargs['task_id']))
+                            kwargs['task_expected_output'], kwargs['last_update'],kwargs['is_denied'],kwargs['is_approved'],
+                            kwargs['is_moderated'], kwargs['task_id']))
             result = True
         elif kwargs['req'] == 'update_decided_user_task':
             cursor.execute(sql_requests.UPDATE_TASK_DECIDED, (kwargs['is_decided'], kwargs['post_id'], kwargs['user_id']))
@@ -277,15 +280,18 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'update_ismoderated':
             if kwargs['post_type'] == 'article':
                 cursor.execute(sql_requests.UPDATE_ISMODER_ARTICLE,
-                               (kwargs['moder'], kwargs['post_id'], kwargs['user_id']))
+                               (kwargs['moder'], kwargs['is_denied'],kwargs['is_approved'],
+                                kwargs['post_id'], kwargs['user_id']))
                 result = True
             elif kwargs['post_type'] == 'task':
                 cursor.execute(sql_requests.UPDATE_ISMODER_TASK,
-                               (kwargs['moder'], kwargs['post_id'], kwargs['user_id']))
+                               (kwargs['moder'], kwargs['is_denied'],kwargs['is_approved'],
+                                kwargs['post_id'], kwargs['user_id']))
                 result = True
             elif kwargs['post_type'] == 'lesson':
                 cursor.execute(sql_requests.UPDATE_ISMODER_LESSON,
-                               (kwargs['moder'], kwargs['post_id'], kwargs['user_id']))
+                               (kwargs['moder'], kwargs['is_denied'],kwargs['is_approved'],
+                                kwargs['post_id'], kwargs['user_id']))
                 result = True
         elif kwargs['req'] == 'insert_seen_lessons':
             cursor.execute(sql_requests.INSERT_SEEN_LESSON,

@@ -243,7 +243,9 @@ async def update_user_article(request):
                                       article_tags=article_tags,
                                       article_id=article_id,
                                       last_update=time,
-                                      is_moderated=False)
+                                      is_moderated=False,
+                                      is_approved=False,
+                                      is_denied=False)
                 response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
@@ -324,7 +326,9 @@ async def update_user_task(request):
                                       task_test_input=task_test_input,
                                       task_expected_output=task_expected_output,
                                       last_update=time,
-                                      is_moderated=False)
+                                      is_moderated = False,
+                                      is_approved = False,
+                                      is_denied=False)
                 if result:
                     lessons_ids = await handle(req='get_links_tasks_to_lessons', task_id=task_id)
 
@@ -422,7 +426,9 @@ async def update_user_lesson(request):
                                       lesson_tags=lesson_tags,
                                       lesson_id=lesson_id,
                                       last_update=time,
-                                      is_moderated=False)
+                                      is_moderated=False,
+                                      is_approved = False,
+                                      is_denied=False)
                 response_msg['msg'] = result
 
         return web.json_response(response_msg, headers=headers)
@@ -1047,8 +1053,8 @@ async def get_post_info(request):
             response_msg['views']               = update_views[0][0]  # views
             response_msg['post_name']           = result[0][0] #name
             response_msg['post_description']    = result[0][1] #desc
-            text = await format_to_article(result[0][2])
-            response_msg['post_text']           = text #text
+            # text = await format_to_article(result[0][2])
+            response_msg['post_text']           = result[0][2] #text
             response_msg['post_rate']           = result[0][3] #rate
 
             if post_type != 'task':
@@ -1073,8 +1079,9 @@ async def get_post_info(request):
                 _lesson_ids = await handle(req='get_links_tasks_to_lessons_post_info', post_id=post_id, post_type=post_type)
                 for _lesson_id in _lesson_ids:
                     cur_lesson = await handle(req='get_lesson_short_info', lesson_id=_lesson_id[0])
-                    j_string = {"lesson_id": cur_lesson[0][0], "lesson_name": cur_lesson[0][1]}
-                    lesson_arr.append(j_string)
+                    if cur_lesson:
+                        j_string = {"lesson_id": cur_lesson[0][0], "lesson_name": cur_lesson[0][1]}
+                        lesson_arr.append(j_string)
                 response_msg['test_input']      = result[0][9] #test input
                 response_msg['expected_output'] = result[0][10] #expected output
                 response_msg['linked_lessons'] = lesson_arr
@@ -1236,6 +1243,7 @@ async def update_vote_post(request):
         post_type = post['postType']
         post_id = post['postId']
         vote_type = post['voteType']
+        print(post)
         print(post_id)
 
         if post_type    == 'task':
@@ -1273,6 +1281,7 @@ async def update_vote_post(request):
             if update_rate:
                 if vote_type == 'up':
                     update = await handle(req='get_vote_state', post_type=post_type, user_id=user_id, post_id=post_id)
+                    print(update)
                     if update[0][0] == False and update[0][1] == False:
                         update = await handle(req='update_vote_lesson', up_vote=True, down_vote=False, post_id=post_id,
                                               user_id=user_id)
@@ -1371,37 +1380,16 @@ async def update_is_moderated(request):
         user_id = post['authorId']
         post_id = post['postId']
         moder = post['moder']
+        is_denied = post['denied']
+        is_approved = post['approved']
+
         post_type = post['postType']
         print(post)
-        upd = await handle(req='update_ismoderated', post_type=post_type, user_id=user_id, post_id=post_id, moder=moder)
+        upd = await handle(req='update_ismoderated', post_type=post_type, user_id=user_id, post_id=post_id, moder=moder,
+                           is_denied=is_denied, is_approved=is_approved)
         if upd:
             response_msg['msg']=upd
         else:
             response_msg['err']=upd
 
         return web.json_response(response_msg, headers=headers)
-
-async def getfb(request):
-    headers = {'Access-Control-Allow-Origin': '*'}
-    if request.method == 'POST':
-        post = await request.json()
-        resp = None
-        if post['type']=='dev':
-            fb_creds_dev = {
-                'apiKey': 'AIzaSyBikSr7T1CseO8oLZpCDIGSnkR05u7aax4',
-                'authDomain': 'test-auth-vuejs.firebaseapp.com',
-                'databaseURL': 'https://test-auth-vuejs.firebaseio.com',
-                'projectId': 'test-auth-vuejs',
-                'storageBucket': 'test-auth-vuejs.appspot.com',
-                'messagingSenderId': '652844837907'}
-            resp = fb_creds_dev
-        else:
-            fb_creds_dep = {'apiKey': 'AIzaSyBOYOK6b8obzZYD9I5TZSz-bC-6PjPpSn0',
-                        'authDomain': 'code2bedev.firebaseapp.com',
-                        'databaseURL': 'https://code2bedev.firebaseio.com',
-                        'projectId': 'code2bedev',
-                        'storageBucket': 'code2bedev.appspot.com',
-                        'messagingSenderId': '598713114594'}
-            resp = fb_creds_dep
-
-        return web.json_response(resp, headers=headers)

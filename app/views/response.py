@@ -11,7 +11,7 @@ from .processings_functions import format_to_article, check_lesson_ids_on_update
 async def test(request):
     # result = await handle(req='test')
     time = datetime.datetime.today()
-    print(time)
+    # print(time)
     headers = {'Access-Control-Allow-Origin': '*', 'content-type': 'text/html'}
     # response = "<div><p><b>kokoko</b></p></div>"
     response = f'<div>{time}</div>'

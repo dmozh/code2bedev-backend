@@ -31,6 +31,11 @@ SELECT_USER_LESSONS_NAME = "SELECT lesson_id, lesson_name " \
                            "WHERE author_id = (SELECT user_id FROM users WHERE user_email = %s) " \
                            "AND lang_id = (SELECT lang_id FROM programming_langs WHERE lang_name = %s)"
 
+SELECT_LANG_LESSONS_NAME = """SELECT lesson_id, lesson_name 
+                              FROM lessons 
+                              WHERE "isApproved"=True
+                              AND lang_id = (SELECT lang_id FROM programming_langs WHERE lang_name = %s)"""
+
 SELECT_USER_LESSONS = "SELECT lessons.lesson_id, lessons.lesson_name, lessons.lesson_description, lessons.lesson_text, lessons.lesson_rate, lessons.lesson_tags, lessons.lang_id, programming_langs.lang_name " \
                       "FROM lessons " \
                       "LEFT OUTER JOIN users on (lessons.author_id = users.user_id) " \
@@ -73,6 +78,11 @@ SELECT_TASK_ON_ID =  "select tasks.task_name, tasks.task_description, tasks.task
                        "from tasks " \
                        "left outer join programming_langs on (tasks.lang_id = programming_langs.lang_id)" \
                        "where task_id=%s"
+
+SELECT_TASK_TO_LESSONS =   "select tasks.task_name, tasks.task_description, tasks.task_text, " \
+                           "tasks.task_difficulty, tasks.test_input, tasks.expected_output " \
+                           "from tasks " \
+                           "where task_id=%s"
 
 SELECT_ALL_ARTICLES = """select articles.article_id, articles.article_name, articles.article_description, 
                       articles.article_rate, articles.article_tags, users.user_name, programming_langs.lang_name, 
@@ -128,8 +138,8 @@ SELECT_LANG_TASKS = """select tasks.task_id, tasks.task_name, tasks.task_descrip
                     left outer join programming_langs on (programming_langs.lang_id = tasks.lang_id)
                     where programming_langs.lang_name = %s and tasks."isApproved"=TRUE """
 
-SELECT_LESSON_TASKS = "select task_id from tasks_to_lessons " \
-                      "where lesson_id = %s;"
+SELECT_LINK_LESSONS_TO_TASKS = "select task_id from tasks_to_lessons " \
+                               "where lesson_id = %s;"
 
 SELECT_SHORT_TASK_INFO = """select task_id, task_name, task_difficulty 
                             from tasks 
@@ -137,6 +147,9 @@ SELECT_SHORT_TASK_INFO = """select task_id, task_name, task_difficulty
 
 SELECT_TASK_LESSONS = "select lesson_id from tasks_to_lessons " \
                       "where task_id = %s;"
+
+SELECT_LESSON_TASKS = "select task_id from tasks_to_lessons " \
+                      "where lesson_id = %s;"
 
 SELECT_SHORT_LESSON_INFO = """select lesson_id, lesson_name 
                               from lessons  

@@ -59,6 +59,9 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'get_langs':
             cursor.execute(sql_requests.SELECT_PROG_LANGS)
             result = cursor.fetchall()
+        elif kwargs['req'] == 'get_lang_lessons_name':
+            cursor.execute(sql_requests.SELECT_LANG_LESSONS_NAME, [kwargs['lang']])
+            result = cursor.fetchall()
         elif kwargs['req'] == 'get_user_lessons_name':
             cursor.execute(sql_requests.SELECT_USER_LESSONS_NAME, [kwargs['user_email'], kwargs['lang']])
             result = cursor.fetchall()
@@ -102,6 +105,7 @@ async def handle(**kwargs):
             elif kwargs['post_type'] == 'task':
                 cursor.execute(sql_requests.SELECT_TASK_LESSONS, [kwargs['post_id']])
                 result = cursor.fetchall()
+
         elif kwargs['req'] == 'get_task_short_info':
             cursor.execute(sql_requests.SELECT_SHORT_TASK_INFO, [kwargs['task_id']])
             result = cursor.fetchall()
@@ -111,8 +115,14 @@ async def handle(**kwargs):
         elif kwargs['req'] == 'get_links_tasks_to_lessons':
             cursor.execute(sql_requests.SELECT_LINK_TASKS_TO_LESSONS, [kwargs['task_id']])
             result = cursor.fetchall()
+        elif kwargs['req'] == 'get_links_lessons_to_tasks':
+            cursor.execute(sql_requests.SELECT_LINK_LESSONS_TO_TASKS, [kwargs['lesson_id']])
+            result = cursor.fetchall()
         elif kwargs['req'] == 'get_lesson_name':
             cursor.execute(sql_requests.SELECT_LESSON_NAME, [kwargs['lesson_id']])
+            result = cursor.fetchall()
+        elif kwargs['req'] == 'get_task':
+            cursor.execute(sql_requests.SELECT_TASK_TO_LESSONS, [kwargs['task_id']])
             result = cursor.fetchall()
         elif kwargs['req'] == 'get_lesson_id':
             cursor.execute(sql_requests.SELECT_LESSON_ID, [kwargs['lesson_name']])

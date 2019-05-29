@@ -3,7 +3,6 @@ import credentials as crs
 
 def setup_routes(app):
     app.router.add_route('GET', f'{crs.API}test', response.test)
-    app.router.add_route('POST', f'{crs.API}getfb', response.getfb)
 
     app.router.add_route('POST', f'{crs.API}addUser', response.add_user)
     app.router.add_route('POST', f'{crs.API}addArticle', response.add_article)
@@ -39,6 +38,8 @@ def setup_routes(app):
     app.router.add_route('POST', f'{crs.API}getTasks', response.get_tasks)
     app.router.add_route('POST', f'{crs.API}getUnModeratedPosts', response.get_unmoderated_posts)
     app.router.add_route('GET',  f'{crs.API}getNews', response.get_news)
+
+    app.router.add_route('POST', f'{crs.API}getLangLessonsName', response.get_langs_lessons_name)
 
     app.router.add_route('POST', f'{crs.API}getPostInfo', response.get_post_info)
 

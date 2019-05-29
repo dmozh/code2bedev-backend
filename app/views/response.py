@@ -169,7 +169,7 @@ async def add_user(request):
 
         #get body req
         post = await request.json()
-
+        print(post)
         user_name    = post['userName']
         user_email   = post['userEmail']
         time = datetime.datetime.today()
@@ -177,6 +177,7 @@ async def add_user(request):
         result = await handle(req='get_valid_name', user_name=user_name, user_email=user_email)
         if result['valid']:
             user_rate = 0
+            print(result)
             result = await handle(req='add_user', user_name=user_name, user_email=user_email, user_rate=user_rate, time=time)
             response_msg['valid'] = True
             response_msg['msg'] = result
@@ -407,10 +408,11 @@ async def update_user_lesson(request):
         lesson_description = post['lessonDescription']
         lesson_text = post['lessonText']
         lesson_id = post['lessonId']
+        lesson_tasks = post['lessonTasks']
         lesson_tags = []
         time = datetime.datetime.today()
+
         _temp_lesson = await handle(req='get_lesson_on_id', lesson_id=lesson_id)
-        print('temp', _temp_lesson)
         if _temp_lesson:
             if ic(_temp_lesson, post, 'lesson'):
                 print('update identical, pass')
@@ -772,14 +774,15 @@ async def get_user_posts(request):
             for i in result:
                 lessons_ids = await handle(req='get_links_tasks_to_lessons', task_id=i[0])
                 links_lessons = []
-                for l_id in lessons_ids:
-                    l_name = await handle(req='get_lesson_name', lesson_id=l_id[0])
-                    _temp = {'lesson_id': l_id[0], 'lesson_name': l_name[0][0]}
-                    links_lessons.append(_temp)
+                if lessons_ids:
+                    for l_id in lessons_ids:
+                        l_name = await handle(req='get_lesson_name', lesson_id=l_id[0])
+                        _temp = {'lesson_id': l_id[0], 'lesson_name': l_name[0][0]}
+                        links_lessons.append(_temp)
                 j_string = {"task_id": i[0], "task_name": i[1], "task_description": i[2], "task_text": i[3],
                             "task_rate": i[4], "task_difficulty": i[5], "test_input": i[6], "expected_output": i[7],
                             "lang_id": i[8], "lang_name": i[9], "lessons": links_lessons}
-                # print(j_string)
+                    # print(j_string)
                 tasks.append(j_string)
         else:
             response_msg['err'] = result
@@ -788,8 +791,16 @@ async def get_user_posts(request):
         result = await handle(req='get_user_lessons', user_email=user_email)
         if result != 'err':
             for i in result:
+                tasks_ids = await handle(req='get_links_lessons_to_tasks', lesson_id=i[0])
+                links_tasks = []
+                if tasks_ids:
+                    for t_id in tasks_ids:
+                        _temp_task = await handle(req='get_task', task_id=t_id[0])
+                        _temp = {"taskId": t_id[0], "taskName": _temp_task[0][0], "taskDescription": _temp_task[0][1], "taskText": _temp_task[0][2],
+                                 "taskDifficulty": _temp_task[0][3], "testInput": _temp_task[0][4], "expectedOutput": _temp_task[0][5]}
+                        links_tasks.append(_temp)
                 j_string = {"lesson_id": i[0], "lesson_name": i[1], "lesson_description": i[2], "lesson_text": i[3],
-                            "lesson_rate": i[4], "lesson_tags": i[5], "lang_id": i[6], "lang_name": i[7]}
+                            "lesson_rate": i[4], "lesson_tags": i[5], "lang_id": i[6], "lang_name": i[7], "tasks": links_tasks}
                 lessons.append(j_string)
         else:
             response_msg['err'] = result
@@ -993,6 +1004,33 @@ async def get_unmoderated_posts(request):
         response = {'posts': response_msg}
 
         return web.json_response(response, headers=headers)
+
+
+async def get_langs_lessons_name(request):
+    headers = {'Access-Control-Allow-Origin': '*', }
+    if request.method == 'POST':
+        response_msg = {}
+
+        # get body req
+        post = await request.json()
+        user_email = post['authorEmail']
+        lang = post['lang']
+        print(post)
+        print(request.method)
+        print(post)
+        result = await handle(req='get_lang_lessons_name', lang=lang)
+        lessons = []
+
+        if result != 'err':
+            for i in result:
+                j_string = {"id": i[0], "lesson_name": i[1]}
+                lessons.append(j_string)
+        else:
+            response_msg['err'] = 'err'
+
+        response_msg['lessons'] = lessons
+
+        return web.json_response(response_msg, headers=headers)
 
 # async def get_lesson_tasks(request):
 #     headers = {'Access-Control-Allow-Origin': '*',}

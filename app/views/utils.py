@@ -2,6 +2,15 @@
 
 async def format_to_article(text):
     code_templates = {}
+    # print(text.find('<script1'))
+    while text.find('<script') != -1:
+        print(text)
+        text = text.replace(
+            '<script',
+            '<notxss'
+        )
+    style = 'width: 100%;'
+    print(text)
     while text.find('<code') > 0:
         start = text.find('<code')
         end = text.find('</code>')+7
@@ -9,7 +18,7 @@ async def format_to_article(text):
         code_templates[f'|code_template_{len(code_templates)+1}|'] = f'{substr}'
         text = text.replace(
             code_templates[f'|code_template_{len(code_templates)}|'],  # template
-            f'|code_template_{len(code_templates)}|\n')                  # replace
+            f'|code_template_{len(code_templates)}|\n')                # replace
     split_text = text.split('\n')
     start = 0
     for i in range(len(split_text)):
@@ -20,7 +29,7 @@ async def format_to_article(text):
                     if len(sub) == 0:
                         pass
                     else:
-                        split_text[i] = f'<div>{split_text[i][start:split_text[i].find(m)]}</div>{sub}'
+                        split_text[i] = f'<div style="{style}">{split_text[i][start:split_text[i].find(m)]}</div>{sub}'
                 else:
                     sub = split_text[i][split_text[i].find(m):len(m)]
                     if len(sub) == 0:
@@ -41,7 +50,7 @@ async def format_to_article(text):
             else:
                 if split_text[i].find('|code_template_') == -1:
                     # print(f'ya {split_text[i]}')
-                    split_text[i] = f'<div>{split_text[i]}</div>'
+                    split_text[i] = f'<div style="{style}">{split_text[i]}</div>'
         # if split_text[i]=='':
         #     split_text.remove('')
     formatted = ''

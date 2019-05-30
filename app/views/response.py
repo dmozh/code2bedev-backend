@@ -4,7 +4,7 @@ import json, datetime
 from .sql_handler import handle
 import requests, credentials
 import base64
-from .processings_functions import format_to_article, check_lesson_ids_on_update_task as chk_ids, identicalChk as ic
+from .utils import format_to_article, check_lesson_ids_on_update_task as chk_ids, identicalChk as ic
 
 # TODO выделить общие части и вынести в отдельный класс
 # TODO сделать хотя бы базовое шифрование и дешифрование передавеммых данных
@@ -1091,8 +1091,8 @@ async def get_post_info(request):
             response_msg['views']               = update_views[0][0]  # views
             response_msg['post_name']           = result[0][0] #name
             response_msg['post_description']    = result[0][1] #desc
-            # text = await format_to_article(result[0][2])
-            response_msg['post_text']           = result[0][2] #text
+            text = await format_to_article(result[0][2])
+            response_msg['post_text']           = text #text
             response_msg['post_rate']           = result[0][3] #rate
 
             if post_type != 'task':
